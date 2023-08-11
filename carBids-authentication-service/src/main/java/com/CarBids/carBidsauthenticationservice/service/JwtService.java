@@ -13,18 +13,18 @@ import java.util.Map;
 public class JwtService implements IJwtService {
     public static final Key SECRET = Keys.secretKeyFor(io.jsonwebtoken.SignatureAlgorithm.HS256);
 
-    @Override
-    public Boolean validateToken(final String token){
-        try {
-            Jws<Claims> claimsJws = Jwts.parserBuilder()
-                    .setSigningKey(SECRET)
-                    .build()
-                    .parseClaimsJws(token);
-            return true;
-        } catch (JwtException e) {
-            return false;
-        }
-    }
+//    @Override
+//    public Boolean validateToken(final String token){
+//        try {
+//            Jws<Claims> claimsJws = Jwts.parserBuilder()
+//                    .setSigningKey(SECRET)
+//                    .build()
+//                    .parseClaimsJws(token);
+//            return true;
+//        } catch (JwtException e) {
+//            return false;
+//        }
+//    }
 
     @Override
     public String generateToken(String userName) {

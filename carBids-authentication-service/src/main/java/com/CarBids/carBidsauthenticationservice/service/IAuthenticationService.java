@@ -10,5 +10,4 @@ public interface IAuthenticationService {
 
     String generateToken(String username);
 
-    void validateToken(String token);
 }

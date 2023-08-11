@@ -16,12 +16,10 @@ import java.time.LocalDateTime;
 @RequestMapping("/auth")
 public class AuthController {
     private final IAuthenticationService authenticationService;
-    private final AuthenticationManager authenticationManager;
 
     @Autowired
-    public AuthController(AuthenticationService authenticationService, AuthenticationManager authenticationManager){
+    public AuthController(AuthenticationService authenticationService){
         this.authenticationService = authenticationService;
-        this.authenticationManager = authenticationManager;
     }
 
     @PostMapping("/register")
@@ -29,21 +27,13 @@ public class AuthController {
         return authenticationService.saveUser(userDetails);
     }
 
-    @GetMapping("/token")
-    public String getToken(@RequestBody AuthRequest authRequest) {
-        Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword()));
-        if (authenticate.isAuthenticated()) {
-            return authenticationService.generateToken(authRequest.getUsername());
-        } else {
-            throw new RuntimeException("invalid access");
-        }
-    }
+    //use spring security default login url.
 
     @GetMapping("/validate")
-    public String validateToken(@RequestParam("token") String token) {
-        authenticationService.validateToken(token);
-        return "Token is valid";
-    }
+    public Boolean validateToken(@RequestParam("token") String token) {
+       return authenticationService.validateToken(token);
 
+
+    }
 
 }

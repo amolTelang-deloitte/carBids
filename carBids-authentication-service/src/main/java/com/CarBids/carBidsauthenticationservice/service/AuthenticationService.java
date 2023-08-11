@@ -50,8 +50,4 @@ public class AuthenticationService implements IAuthenticationService, UserDetail
         return jwtService.generateToken(username);
     }
 
-    @Override
-    public void validateToken(String token){
-        jwtService.validateToken(token);
-    }
 }

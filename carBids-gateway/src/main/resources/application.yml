@@ -5,6 +5,14 @@ spring:
   application:
     name: API-GATEWAY
 
+  cloud:
+    gateway:
+      routes:
+        - id: authentication-service
+          uri: lb://AUTHENTICATION-SERVICE
+          predicates:
+            - Path=/auth/**
+
 eureka:
   instance:
     prefer-ip-address: true
@@ -12,4 +20,4 @@ eureka:
     fetch-registry: true
     register-with-eureka: true
     service-url:
-      defaultZone: http://localhost:8080/eureka
+      defaultZone: http://localhost:8765/eureka

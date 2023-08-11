@@ -1,6 +1,7 @@
 package com.CarBids.carBidsauthenticationservice.security.filter;
 
 import com.CarBids.carBidsauthenticationservice.service.IAuthenticationService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -19,9 +20,12 @@ import java.util.Base64;
 public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     private final AuthenticationManager authenticationManager;
     private final IAuthenticationService authenticationService;
+
+    @Autowired
     public CustomAuthenticationFilter(AuthenticationManager authenticationManager, IAuthenticationService authenticationService){
         this.authenticationManager = authenticationManager;
         this.authenticationService = authenticationService;
+        setFilterProcessesUrl("/auth/login");
     }
 
     @Override
