@@ -33,7 +33,7 @@ public class AuthController {
     public String getToken(@RequestBody AuthRequest authRequest) {
         Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword()));
         if (authenticate.isAuthenticated()) {
-            return authenticationService.generateToken(authRequest.getUsername(), LocalDateTime.now());
+            return authenticationService.generateToken(authRequest.getUsername());
         } else {
             throw new RuntimeException("invalid access");
         }

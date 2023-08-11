@@ -1,8 +1,6 @@
 package com.CarBids.carBidsauthenticationservice.service;
 
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
 
@@ -13,11 +11,19 @@ import java.util.Map;
 
 @Component
 public class JwtService implements IJwtService {
-    public static final String SECRET = "quhaxv3iqkt40hwdzp6doug2xxhqub6vwqg93";
+    public static final Key SECRET = Keys.secretKeyFor(io.jsonwebtoken.SignatureAlgorithm.HS256);
 
     @Override
-    public void validateToken(final String token){
-        Jwts.parserBuilder().setSigningKey(getSignKey()).build().parseClaimsJws(token);
+    public Boolean validateToken(final String token){
+        try {
+            Jws<Claims> claimsJws = Jwts.parserBuilder()
+                    .setSigningKey(SECRET)
+                    .build()
+                    .parseClaimsJws(token);
+            return true;
+        } catch (JwtException e) {
+            return false;
+        }
     }
 
     @Override
@@ -26,6 +32,10 @@ public class JwtService implements IJwtService {
         return createToken(claims, userName);
     }
 
+    public String getUsernameFromToken(String token) {
+        Claims claims = Jwts.parserBuilder().setSigningKey(SECRET).build().parseClaimsJws(token).getBody();
+        return claims.getSubject();
+    }
 
     private String createToken(Map<String, Object> claims, String userName) {
         return Jwts.builder()
@@ -33,11 +43,7 @@ public class JwtService implements IJwtService {
                 .setSubject(userName)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 30))
-                .signWith(getSignKey(), SignatureAlgorithm.HS256).compact();
+                .signWith(SECRET, SignatureAlgorithm.HS256).compact();
     }
 
-    private Key getSignKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(SECRET);
-        return Keys.hmacShaKeyFor(keyBytes);
-    }
 }
