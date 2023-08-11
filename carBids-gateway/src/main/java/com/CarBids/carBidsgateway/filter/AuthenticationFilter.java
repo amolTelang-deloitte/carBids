@@ -10,14 +10,15 @@ import org.springframework.stereotype.Component;
 @Component
 public class AuthenticationFilter extends AbstractGatewayFilterFactory<AuthenticationFilter.Config> {
 
-    @Autowired
-    private RouteValidator validator;
+    private final RouteValidator validator;
 
-    @Autowired
-    private JwtUtil jwtUtil;
+    private final JwtUtil jwtUtil;
 
-    public AuthenticationFilter() {
+
+    public AuthenticationFilter(JwtUtil jwtUtil, RouteValidator validator) {
         super(Config.class);
+        this.jwtUtil = jwtUtil;
+        this.validator = validator;
     }
 
     @Override
