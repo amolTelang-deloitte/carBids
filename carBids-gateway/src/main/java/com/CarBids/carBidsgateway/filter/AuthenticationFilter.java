@@ -34,11 +34,7 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                 if (authHeader != null && authHeader.startsWith("Bearer ")) {
                     authHeader = authHeader.substring(7);
                 }
-                try {;
-                    jwtUtil.validateToken(authHeader);
-
-                } catch (Exception e) {
-                    System.out.println("invalid access...!");
+                if(!jwtUtil.validateToken(authHeader)){
                     throw new RuntimeException("un authorized access to application");
                 }
             }

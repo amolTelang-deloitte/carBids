@@ -29,11 +29,4 @@ public class AuthController {
 
     //use spring security default login url.
 
-    @GetMapping("/validate")
-    public Boolean validateToken(@RequestParam("token") String token) {
-       return authenticationService.validateToken(token);
-
-
-    }
-
 }

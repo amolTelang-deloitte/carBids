@@ -1,0 +1,15 @@
+package com.CarBids.testprivateservice;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/private")
+public class testController {
+
+    @GetMapping("/test")
+    public String testPrivateService(){
+        return " successfully accessed private service";
+    }
+}

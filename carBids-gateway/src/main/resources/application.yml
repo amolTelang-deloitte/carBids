@@ -13,6 +13,13 @@ spring:
           predicates:
             - Path=/auth/**
 
+        - id: test-private-server
+          uri: lb://TEST-PRIVATE-SERVER
+          predicates:
+            - Path=/private/**
+          filters:
+            - AuthenticationFilter
+
 eureka:
   instance:
     prefer-ip-address: true
