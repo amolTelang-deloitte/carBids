@@ -7,18 +7,11 @@ spring:
 
   cloud:
     gateway:
-      routes:hw
+      routes:
         - id: authentication-service
           uri: lb://AUTHENTICATION-SERVICE
           predicates:
             - Path=/auth/**
-
-        - id: test-private-server
-          uri: lb://TEST-PRIVATE-SERVER
-          predicates:
-            - Path=/private/**
-          filters:
-            - AuthenticationFilter
 
 eureka:
   instance:
@@ -27,4 +20,4 @@ eureka:
     fetch-registry: true
     register-with-eureka: true
     service-url:
-      defaultZone: http://localhost:8761/eureka
+      defaultZone: http://localhost:8765/eureka
