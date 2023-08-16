@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name="lot")
@@ -25,6 +26,9 @@ public class Lot {
     @NonNull
     private String carStatus;
     @NonNull
-    private 
+    private LocalDateTime startTimestamp;
+    @NonNull
+    private LocalDateTime endTimestamp;
+
 
 }

@@ -7,7 +7,7 @@ spring:
 
   cloud:
     gateway:
-      routes:
+      routes:hw
         - id: authentication-service
           uri: lb://AUTHENTICATION-SERVICE
           predicates:
