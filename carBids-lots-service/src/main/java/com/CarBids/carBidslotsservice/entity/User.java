@@ -1,10 +1,11 @@
-package com.CarBids.carBidsauthenticationservice.entity;
+package com.CarBids.carBidslotsservice.entity;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
 import javax.persistence.*;
-import javax.validation.constraints.Email;
-import javax.validation.constraints.Pattern;
 
 @Entity
 @Table(name = "user")
@@ -22,10 +23,8 @@ public class User {
     @NonNull
     private String lastName;
     @NonNull
-    @Email(message = "Please provide a valid email address")
     private String email;
     @NonNull
-    @Pattern(regexp = "\\d{10}", message = "Phone number must be a 10-digit number")
     private String phoneNumber;
     @NonNull
     private String password;

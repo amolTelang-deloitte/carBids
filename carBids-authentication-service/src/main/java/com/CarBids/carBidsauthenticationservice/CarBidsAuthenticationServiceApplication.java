@@ -9,6 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 @SpringBootApplication
 @EnableDiscoveryClient
+
 public class CarBidsAuthenticationServiceApplication {
 
 	public static void main(String[] args) {

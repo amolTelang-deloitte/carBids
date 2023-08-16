@@ -30,5 +30,9 @@ public class Lot {
     @NonNull
     private LocalDateTime endTimestamp;
 
+    @ManyToOne
+    @JoinColumn(name = "user_id", referencedColumnName = "userId")
+    private User user;
+
 
 }

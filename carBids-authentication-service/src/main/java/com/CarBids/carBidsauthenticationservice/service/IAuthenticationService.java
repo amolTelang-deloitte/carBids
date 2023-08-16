@@ -1,8 +1,7 @@
 package com.CarBids.carBidsauthenticationservice.service;
 
-import com.CarBids.carBidsauthenticationservice.entity.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import com.CarBids.carBidscommonentites.User;
+
 
 
 public interface IAuthenticationService {

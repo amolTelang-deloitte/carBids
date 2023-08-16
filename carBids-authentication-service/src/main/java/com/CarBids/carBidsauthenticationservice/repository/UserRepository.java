@@ -1,6 +1,6 @@
 package com.CarBids.carBidsauthenticationservice.repository;
 
-import com.CarBids.carBidsauthenticationservice.entity.User;
+import com.CarBids.carBidscommonentites.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

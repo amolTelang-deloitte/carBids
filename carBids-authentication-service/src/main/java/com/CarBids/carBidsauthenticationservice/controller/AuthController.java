@@ -1,7 +1,6 @@
 package com.CarBids.carBidsauthenticationservice.controller;
 
-import com.CarBids.carBidsauthenticationservice.dto.AuthRequest;
-import com.CarBids.carBidsauthenticationservice.entity.User;
+import com.CarBids.carBidscommonentites.User;
 import com.CarBids.carBidsauthenticationservice.service.AuthenticationService;
 import com.CarBids.carBidsauthenticationservice.service.IAuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;
