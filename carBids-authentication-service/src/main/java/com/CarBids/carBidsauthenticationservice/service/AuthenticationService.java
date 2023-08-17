@@ -39,9 +39,7 @@ public class AuthenticationService implements IAuthenticationService, UserDetail
             throw new InvalidBase64Exception("Incorrect Base64 encoded password");
         }
         String decodedPassword = new String(Base64.getDecoder().decode(password));
-
-        UsernamePasswordAuthenticationToken token =   new UsernamePasswordAuthenticationToken(username, decodedPassword);
-        return token;
+        return  new UsernamePasswordAuthenticationToken(username, decodedPassword);
     }
 
     @Override
@@ -88,6 +86,7 @@ public class AuthenticationService implements IAuthenticationService, UserDetail
     public String decodeBase64(String password){
        return new String(Base64.getDecoder().decode(password));
     }
+
     public static boolean isBase64Encoded(String input) {
         try {
             Base64.getDecoder().decode(input);
@@ -98,17 +97,11 @@ public class AuthenticationService implements IAuthenticationService, UserDetail
     }
 
     public static boolean isValidPhoneNo(String phno){
-        if(Pattern.matches("[0-9]{10}", phno))
-            return true;
-        else
-            return false;
+        return Pattern.matches("[0-9]{10}", phno);
     }
 
     public static boolean isValidEmail(String email){
-        if( Pattern.matches("^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", email))
-            return true;
-        else
-            return false;
+        return Pattern.matches("^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", email);
     }
 
 }

@@ -7,6 +7,9 @@ import lombok.NonNull;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 @Entity
 @Table(name="lot")
@@ -18,21 +21,30 @@ public class Lot {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long lotId;
     @NonNull
+    private String vin;
+    @NonNull
     private String carName;
     @NonNull
-    private String carType;
+    private String bodyType;
     @NonNull
-    private String carDesc;
+    private String transmissionType;
     @NonNull
-    private String carStatus;
+    private String modelYear;
+    private List<String> carFeatures=new ArrayList<>();
+    @NonNull
+    private List<String>carPhotosURI = new ArrayList<>();
+    private String listerComment;
+    @NonNull
+    private String startingValue;
+    @NonNull
+    private String minBidValue;
+    @NonNull
+    private String lotStatus;
     @NonNull
     private LocalDateTime startTimestamp;
     @NonNull
-    private LocalDateTime endTimestamp;
-
+    private Date endDate;
     @ManyToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "userId")
+    @JoinColumn(name = "user_id")
     private User user;
-
-
 }
