@@ -1,6 +1,7 @@
 package com.CarBids.carBidsauthenticationservice.exception;
 
 import com.CarBids.carBidsauthenticationservice.exception.exceptions.InvalidBase64Exception;
+import com.CarBids.carBidsauthenticationservice.exception.exceptions.InvalidCredentialsException;
 import com.CarBids.carBidsauthenticationservice.exception.exceptions.UserAlreadyExistsException;
 import org.omg.CORBA.UserException;
 import org.springframework.http.HttpStatus;
@@ -28,6 +29,14 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
     //invalid base64 string
     @ExceptionHandler(value = InvalidBase64Exception.class)
     public ResponseEntity<Object> handleInvalidBase64Exception(InvalidBase64Exception exception){
+        HttpStatus unauth = HttpStatus.BAD_REQUEST;
+        ExceptionDetails e = new ExceptionDetails(exception.getMessage(), unauth, ZonedDateTime.now(ZoneId.of("Z")));
+        return new ResponseEntity<>(e, unauth);
+    }
+
+    //invalid credentials exception
+    @ExceptionHandler(value = InvalidCredentialsException.class)
+    public ResponseEntity<Object> handleInvalidCredentialsException(InvalidCredentialsException exception){
         HttpStatus unauth = HttpStatus.BAD_REQUEST;
         ExceptionDetails e = new ExceptionDetails(exception.getMessage(), unauth, ZonedDateTime.now(ZoneId.of("Z")));
         return new ResponseEntity<>(e, unauth);
