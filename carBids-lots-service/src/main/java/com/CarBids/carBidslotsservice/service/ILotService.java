@@ -5,7 +5,7 @@ import org.springframework.http.ResponseEntity;
 
 public interface ILotService {
 
-    ResponseEntity<?> saveLot(CarDetails carDetails);
+    ResponseEntity<?> saveLot(CarDetails carDetails,Long userId);
     ResponseEntity<?> deleteLot(Long lotId);
     ResponseEntity<?> updateLot(Long lotId);
 

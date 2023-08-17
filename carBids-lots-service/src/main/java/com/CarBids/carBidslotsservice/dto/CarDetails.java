@@ -19,10 +19,10 @@ public class CarDetails {
     private String bodyType;
     private String transmissionType;
     private String modelYear;
-    private List<String> carFeatures = new ArrayList<>();
     private List<String> carPhotosURI = new ArrayList<>();
     private String listerComment;
     private String startingValue;
+    private String minBidValue;
     private Date endDate;
 
 }

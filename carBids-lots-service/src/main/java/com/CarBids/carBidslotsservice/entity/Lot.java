@@ -1,9 +1,10 @@
 package com.CarBids.carBidslotsservice.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
+import com.CarBids.carBidslotsservice.enums.CarEnum.BodyType;
+import com.CarBids.carBidslotsservice.enums.CarEnum.TransmissionType;
+import com.CarBids.carBidslotsservice.enums.LotEnum.LotStatus;
+import com.CarBids.carBidslotsservice.service.LotService;
+import lombok.*;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -16,6 +17,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Lot {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,26 +27,29 @@ public class Lot {
     @NonNull
     private String carName;
     @NonNull
-    private String bodyType;
+    private BodyType bodyType;
     @NonNull
-    private String transmissionType;
+    private TransmissionType transmissionType;
     @NonNull
     private String modelYear;
-    private List<String> carFeatures=new ArrayList<>();
+
     @NonNull
-    private List<String>carPhotosURI = new ArrayList<>();
+    @ElementCollection
+    @CollectionTable(name = "car_photo_uri") // Name of the table to store tags
+    @Column(name = "uri")
+    private List<String> photoUri;
+    @NonNull
     private String listerComment;
     @NonNull
     private String startingValue;
     @NonNull
     private String minBidValue;
     @NonNull
-    private String lotStatus;
+    private LotStatus lotStatus;
     @NonNull
     private LocalDateTime startTimestamp;
     @NonNull
     private Date endDate;
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
+    @NonNull
+    private Long userId;
 }

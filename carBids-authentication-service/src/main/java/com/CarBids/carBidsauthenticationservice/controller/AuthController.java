@@ -35,7 +35,7 @@ public class AuthController {
             return ResponseEntity.ok().body(access_token);
         } catch (AuthenticationException e) {
             // Handle authentication failure
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Credentials! Please check again.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Credentials ! plaese");
         }
     }
     @PostMapping("/register")

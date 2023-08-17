@@ -79,7 +79,8 @@ public class AuthenticationService implements IAuthenticationService, UserDetail
 
     @Override
     public String generateToken(String username){
-        return jwtService.generateToken(username);
+        Optional<User> userOptional = userRepository.findByusername(username);
+        return jwtService.generateToken(username,userOptional.get().getUserId());
     }
 
     @Override

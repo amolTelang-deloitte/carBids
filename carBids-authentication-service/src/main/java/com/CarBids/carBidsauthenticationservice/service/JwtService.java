@@ -15,9 +15,9 @@ public class JwtService implements IJwtService {
     public static final String SECRET = "5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437";
 
     @Override
-    public String generateToken(String userName) {
+    public String generateToken(String userName,Long userId) {
         Map<String, Object> claims = new HashMap<>();
-        return createToken(claims, userName);
+        return createToken(claims, userName,userId);
     }
 
     public String getUsernameFromToken(String token) {
@@ -25,10 +25,11 @@ public class JwtService implements IJwtService {
         return claims.getSubject();
     }
 
-    private String createToken(Map<String, Object> claims, String userName) {
+    private String createToken(Map<String, Object> claims, String userName,Long userId) {
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(userName)
+                .setSubject(userId.toString())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 30))
                 .signWith(getSignKey(), SignatureAlgorithm.HS256).compact();
