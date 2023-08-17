@@ -1,15 +1,14 @@
 package com.CarBids.carBidsauthenticationservice.service;
 
+import com.CarBids.carBidsauthenticationservice.exception.exceptions.InvalidBase64Exception;
+import com.CarBids.carBidsauthenticationservice.exception.exceptions.UserAlreadyExistsException;
 import com.CarBids.carBidscommonentites.User;
 import com.CarBids.carBidsauthenticationservice.repository.UserRepository;
+import javafx.beans.binding.BooleanExpression;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -17,6 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.Base64;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 
 @Service
@@ -24,35 +24,36 @@ public class AuthenticationService implements IAuthenticationService, UserDetail
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final IJwtService jwtService;
-    private final AuthenticationManager authenticationManager;
 
     @Autowired
-    public AuthenticationService(UserRepository userRepository, PasswordEncoder passwordEncoder, IJwtService jwtService, AuthenticationManager authenticationManager){
+    public AuthenticationService(UserRepository userRepository, PasswordEncoder passwordEncoder, IJwtService jwtService){
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
-        this.authenticationManager = authenticationManager;
     }
 
     @Override
-    public ResponseEntity<?> authenticateUser(String username, String password){
+    public UsernamePasswordAuthenticationToken authenticateUser(String username, String password){
         String decodedPassword = new String(Base64.getDecoder().decode(password));
-        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(username, decodedPassword);
-        try {
-            Authentication authentication = authenticationManager.authenticate(authenticationToken);
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            String access_token = jwtService.generateToken(userDetails.getUsername());
-            return ResponseEntity.ok().body(access_token);
-        } catch (AuthenticationException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication failed");
-        }
+        return  new UsernamePasswordAuthenticationToken(username, decodedPassword);
+
     }
 
     @Override
-    public String saveUser(User userDetails){
+    public ResponseEntity<?> saveUser(User userDetails){
+        if(userRepository.existsByEmailOrPhoneNumber(userDetails.getEmail(),userDetails.getPhoneNumber())){
+            throw new UserAlreadyExistsException("User with same credentials already exists");
+        }
+        if(!isBase64Encoded(userDetails.getPassword())){
+            throw new InvalidBase64Exception("Incorrect Base64 encoded password");
+        }
+        if(userRepository.existsByusername(userDetails.getUsername())){
+            throw new UserAlreadyExistsException("Username already exists choose a differnt one");
+        }
        userDetails.setPassword(passwordEncoder.encode(new String(Base64.getDecoder().decode(userDetails.getPassword()))));
        userRepository.save(userDetails);
-       return "added into db";
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body("User added successfully");
     }
 
     @Override
@@ -75,5 +76,15 @@ public class AuthenticationService implements IAuthenticationService, UserDetail
     public String decodeBase64(String password){
        return new String(Base64.getDecoder().decode(password));
     }
+    public static boolean isBase64Encoded(String input) {
+        try {
+            Base64.getDecoder().decode(input);
+            return Pattern.matches("^[A-Za-z0-9+/]*[=]{0,2}$", input);
+        } catch (IllegalArgumentException ex) {
+            return false;
+        }
+    }
+
+
 
 }

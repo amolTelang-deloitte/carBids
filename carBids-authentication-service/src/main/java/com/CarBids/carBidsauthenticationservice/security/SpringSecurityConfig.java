@@ -1,6 +1,5 @@
 package com.CarBids.carBidsauthenticationservice.security;
 
-import com.CarBids.carBidsauthenticationservice.service.IJwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,6 +17,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
     private final UserDetailsService userDetailsService;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
+
+
 
     @Autowired
     public SpringSecurityConfig(UserDetailsService userDetailsService, BCryptPasswordEncoder bCryptPasswordEncoder){
@@ -64,4 +65,5 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
     public AuthenticationManager authenticationManager() throws Exception{
         return super.authenticationManager();
     }
+
 }

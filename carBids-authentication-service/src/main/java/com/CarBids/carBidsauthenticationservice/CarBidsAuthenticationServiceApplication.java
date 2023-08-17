@@ -23,4 +23,5 @@ public class CarBidsAuthenticationServiceApplication {
 	PasswordEncoder passwordEncoder(){
 		return new BCryptPasswordEncoder();
 	}
+
 }

@@ -1,7 +1,5 @@
 package com.CarBids.carBidsauthenticationservice.security.filter;
 
-import com.CarBids.carBidsauthenticationservice.exception.InvalidBase64Exception;
-import com.CarBids.carBidsauthenticationservice.exception.exceptions.InvalidPasswordException;
 import com.CarBids.carBidsauthenticationservice.service.IAuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -42,7 +40,7 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
     }
 
     @Override
-    protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication) throws IOException, ServletException, InvalidPasswordException {
+    protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication) throws IOException, ServletException {
             User user = (User)authentication.getPrincipal();
             String access_token = authenticationService.generateToken(user.getUsername());
             response.setHeader("access_token",access_token);

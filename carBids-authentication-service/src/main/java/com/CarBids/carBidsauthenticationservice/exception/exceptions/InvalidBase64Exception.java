@@ -1,4 +1,4 @@
-package com.CarBids.carBidsauthenticationservice.exception;
+package com.CarBids.carBidsauthenticationservice.exception.exceptions;
 
 
 public class InvalidBase64Exception extends RuntimeException {
