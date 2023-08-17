@@ -1,7 +1,5 @@
 package com.CarBids.carBidsauthenticationservice.security;
 
-import com.CarBids.carBidsauthenticationservice.security.filter.CustomAuthenticationFilter;
-import com.CarBids.carBidsauthenticationservice.service.IAuthenticationService;
 import com.CarBids.carBidsauthenticationservice.service.IJwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -20,13 +18,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
     private final UserDetailsService userDetailsService;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
-    private final IAuthenticationService authenticationService;
 
     @Autowired
-    public SpringSecurityConfig(UserDetailsService userDetailsService, BCryptPasswordEncoder bCryptPasswordEncoder, IAuthenticationService authenticationService, IJwtService jwtService){
+    public SpringSecurityConfig(UserDetailsService userDetailsService, BCryptPasswordEncoder bCryptPasswordEncoder){
         this.userDetailsService = userDetailsService;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
-        this.authenticationService = authenticationService;
     }
 
     //expression for all public url
@@ -39,11 +35,9 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
             "/configuration/security",
             "/swagger-ui.html",
             "/webjars/**",
-            // -- Swagger UI v3 (OpenAPI)
             "/v3/api-docs/**",
             "/swagger-ui/**",
             "/auth/**",
-            // other public endpoints of your API may be appended to this array
     };
 
     @Override
