@@ -1,5 +1,6 @@
 package com.CarBids.carBidsauthenticationservice.controller;
 
+import com.CarBids.carBidsauthenticationservice.exception.InvalidBase64Exception;
 import com.CarBids.carBidscommonentites.User;
 import com.CarBids.carBidsauthenticationservice.service.AuthenticationService;
 import com.CarBids.carBidsauthenticationservice.service.IAuthenticationService;
@@ -20,6 +21,7 @@ public class AuthController {
     public AuthController(AuthenticationService authenticationService){
         this.authenticationService = authenticationService;
     }
+    
 
     @PostMapping("/register")
     public String addNewUser(@RequestBody User userDetails) {
