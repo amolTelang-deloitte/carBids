@@ -20,8 +20,7 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(value = InvalidBase64Exception.class)
     public ResponseEntity<Object> handleInvalidBase64Exception(InvalidBase64Exception exception){
         HttpStatus unauth = HttpStatus.UNAUTHORIZED;
-        ExceptionDetails e = new ExceptionDetails(exception.getMessage(), exception, unauth, ZonedDateTime.now(ZoneId.of("Z")));
-        System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+        ExceptionDetails e = new ExceptionDetails(exception.getMessage(), unauth, ZonedDateTime.now(ZoneId.of("Z")));
         return new ResponseEntity<>(e, unauth);
     }
 
@@ -29,8 +28,7 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(value = Exception.class)
     public ResponseEntity<?> handleGenericException(final Exception exception, WebRequest request){
         HttpStatus unauth = HttpStatus.UNAUTHORIZED;
-        System.out.println("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
-        ExceptionDetails errorDetails = new ExceptionDetails(exception.getMessage(), exception, unauth, ZonedDateTime.now(ZoneId.of("Z")));
+        ExceptionDetails errorDetails = new ExceptionDetails(exception.getMessage(), unauth, ZonedDateTime.now(ZoneId.of("Z")));
         return new ResponseEntity<>(errorDetails, HttpStatus.FORBIDDEN);
     }
 

@@ -34,9 +34,6 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException{
             String username = request.getParameter("username");
-        if (!isBase64Encoded(request.getParameter("password"))){
-            throw new InvalidBase64Exception("Enter password in base64 format");
-        }
             String password = new String(Base64.getDecoder().decode(request.getParameter("password")));
 
             UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(username, password);
@@ -46,18 +43,13 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
 
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication) throws IOException, ServletException, InvalidPasswordException {
-
-        try{
             User user = (User)authentication.getPrincipal();
             String access_token = authenticationService.generateToken(user.getUsername());
             response.setHeader("access_token",access_token);
-        }
-        catch (Exception e){
-            throw new InvalidPasswordException(e.getMessage());
-        }
+
     }
 
-    public static boolean isBase64Encoded(String input) {
+    public boolean isBase64Encoded(String input) {
         try {
             Base64.getDecoder().decode(input);
             // Check if the string matches the Base64 pattern (optional)

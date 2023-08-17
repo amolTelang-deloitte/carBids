@@ -61,8 +61,7 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
                 .authorizeRequests()
                 .antMatchers(AUTH_WHITELIST).permitAll()
                 .anyRequest().authenticated()
-                .and()
-                .addFilter(new CustomAuthenticationFilter(authenticationManagerBean(), authenticationService));
+                .and();
 
     }
 

@@ -50,4 +50,9 @@ public class AuthenticationService implements IAuthenticationService, UserDetail
         return jwtService.generateToken(username);
     }
 
+    @Override
+    public String decodeBase64(String password){
+       return new String(Base64.getDecoder().decode(password));
+    }
+
 }
