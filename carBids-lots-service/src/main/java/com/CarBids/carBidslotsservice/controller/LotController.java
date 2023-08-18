@@ -50,8 +50,24 @@ public class LotController {
     }
 
     //get all listing
-    @GetMapping("/getAll")
+    @GetMapping("/get/all")
     public ResponseEntity<?> getAllLot(){
         return lotService.getAllLot();
+    }
+
+    //get all active listing
+    @GetMapping("/get/active")
+    public ResponseEntity<?> getActiveListings(){
+        return lotService.getActiveListings();
+    }
+
+    @GetMapping("/get/getLot")
+    public ResponseEntity<?> getLotById(@RequestParam(required = true)Long lotId){
+        return lotService.getLotbyId(lotId);
+    }
+
+    @PostMapping("/end/premature")
+    public ResponseEntity<?> clostLotPremature(@RequestParam(required = true)Long lotId){
+        return lotService.closeLotPremature(lotId);
     }
 }

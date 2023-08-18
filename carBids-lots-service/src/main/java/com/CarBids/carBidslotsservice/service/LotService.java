@@ -61,6 +61,26 @@ public class LotService implements ILotService {
     }
 
     @Override
+    public ResponseEntity<?> getActiveListings() {
+        return new ResponseEntity<>(lotRepository.findByLotStatus(LotStatus.RUNNING),HttpStatus.FOUND);
+    }
+
+    @Override
+    public ResponseEntity<?> getLotbyId(Long lotId) {
+        return new ResponseEntity<>(lotRepository.findById(lotId).get(),HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<?> closeLotPremature(Long lotId) {
+        Lot lot = lotRepository.findById(lotId)
+                .orElseThrow(() -> new IllegalArgumentException("Lot with ID " + lotId + " not found"));
+
+        lot.setLotStatus(LotStatus.CLOSED);
+        lotRepository.save(lot);
+        return new ResponseEntity<>("successfully closed lot",HttpStatus.OK);
+    }
+
+    @Override
     public ResponseEntity<?> deleteLot(Long lotId) {
         return null;
     }

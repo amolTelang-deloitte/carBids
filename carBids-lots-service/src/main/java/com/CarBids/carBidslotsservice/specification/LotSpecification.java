@@ -12,7 +12,7 @@ import javax.persistence.criteria.Predicate;
 public class LotSpecification {
     public static Specification<Lot> withCriteria(String modelYear, String bodyType, String transmissionType){
         return (root, query, criteriaBuilder) -> {
-          
+
             List<Predicate> predicates = new ArrayList<>();
 
             if (modelYear != null && !modelYear.isEmpty()) {
@@ -31,4 +31,6 @@ public class LotSpecification {
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
     }
+
+    
 }
