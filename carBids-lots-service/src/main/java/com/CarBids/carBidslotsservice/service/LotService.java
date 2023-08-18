@@ -10,8 +10,10 @@ import com.CarBids.carBidslotsservice.specification.LotSpecification;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -78,6 +80,20 @@ public class LotService implements ILotService {
         lot.setLotStatus(LotStatus.CLOSED);
         lotRepository.save(lot);
         return new ResponseEntity<>("successfully closed lot",HttpStatus.OK);
+    }
+
+    @Override
+    @Transactional
+    @Scheduled(fixedRate = 3000)
+    public void closeExpiredLots() {
+        List<Lot> expiredLot = lotRepository.findByEndDateBeforeAndLotStatus(LocalDateTime.now(), LotStatus.RUNNING);
+        expiredLot.stream()
+                .filter(lot -> lot.getLotStatus() == LotStatus.RUNNING)
+                .forEach(lot -> {
+                    lot.setLotStatus(LotStatus.CLOSED);
+                });
+        lotRepository.saveAll(expiredLot);
+
     }
 
     @Override

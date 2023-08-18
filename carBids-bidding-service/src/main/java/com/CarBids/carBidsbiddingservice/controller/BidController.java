@@ -41,4 +41,9 @@ public class BidController {
         }
     }
 
+    @PutMapping("/close")
+    public ResponseEntity<?>closeBidding(@RequestParam(required = true)Long collectionId){
+        return bidService.closeBidding(collectionId);
+    }
+
 }

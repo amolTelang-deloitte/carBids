@@ -15,8 +15,8 @@ import java.util.*;
 @Component
 public class BidQueueManager implements ApplicationListener<BidPlacedEvent> {
 
-    private BidRepository bidRepository;
-    private BidCollectionRepository bidCollectionRepository;
+    private final BidRepository bidRepository;
+    private final BidCollectionRepository bidCollectionRepository;
 
     @Autowired
     public BidQueueManager(BidRepository bidRepository, BidCollectionRepository bidCollectionRepository){

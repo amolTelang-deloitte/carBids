@@ -9,4 +9,6 @@ public interface IBidService {
     ResponseEntity<?> saveBidCollection(CollectionDetails newCollection);
 
     ResponseEntity<?> addBid(BidDetails bidDetails, Long userId);
+
+    ResponseEntity<?> closeBidding(Long collectionId);
 }

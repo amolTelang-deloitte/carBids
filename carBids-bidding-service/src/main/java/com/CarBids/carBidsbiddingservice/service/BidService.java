@@ -50,4 +50,12 @@ public class BidService implements IBidService{
         eventPublisher.publishEvent(new BidPlacedEvent(this,bidDetails.getLotId(),userId,bidDetails.getBidValue()));
         return new ResponseEntity<>("createdBid",HttpStatus.CREATED);
     }
+
+    @Override
+    public ResponseEntity<?> closeBidding(Long lotId) {
+        BidCollection collection = bidCollectionRepository.findOneBylotId(lotId);
+                collection.setBiddingStatus(CollectionStatus.CLOSED);
+                bidCollectionRepository.save(collection);
+        return new ResponseEntity<>("successfully closed bidding no longer available",HttpStatus.OK);
+    }
 }

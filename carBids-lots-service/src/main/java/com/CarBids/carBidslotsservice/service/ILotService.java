@@ -11,6 +11,7 @@ public interface ILotService {
     ResponseEntity<?>getActiveListings();
     ResponseEntity<?>getLotbyId(Long lotId);
     ResponseEntity<?>closeLotPremature(Long lotId);
+    void closeExpiredLots();
     ResponseEntity<?> deleteLot(Long lotId);
     ResponseEntity<?> updateLot(Long lotId);
 
