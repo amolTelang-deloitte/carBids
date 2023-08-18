@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface BidRepository extends JpaRepository<Bid, Long> {
     List<Bid> findBycollectionIdOrderByBidValueDesc(Long collectionId);
+
 }

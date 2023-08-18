@@ -1,6 +1,6 @@
 spring:
   application:
-    name:CARBIDS-BIDDING-SERVICE
+    name: CARBIDS-BIDDING-SERVICE
 
   jpa:
     hibernate:

@@ -7,7 +7,8 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CollectionDetails {
+public class BidDetails {
     private Long lotId;
-    private String startingValue;
+    private String bidValue;
 }
+

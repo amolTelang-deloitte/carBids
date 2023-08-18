@@ -2,50 +2,81 @@ package com.CarBids.carBidsbiddingservice.Event.EventManager;
 
 import com.CarBids.carBidsbiddingservice.Event.BidPlacedEvent;
 import com.CarBids.carBidsbiddingservice.entity.Bid;
+import com.CarBids.carBidsbiddingservice.entity.BidCollection;
 import com.CarBids.carBidsbiddingservice.repository.BidCollectionRepository;
 import com.CarBids.carBidsbiddingservice.repository.BidRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
+import org.springframework.stereotype.Component;
 
+import javax.persistence.criteria.CriteriaBuilder;
 import java.util.*;
 
+@Component
 public class BidQueueManager implements ApplicationListener<BidPlacedEvent> {
-    private final Map<Long, Queue<String>> bidQueue = new HashMap<>();
 
-    @Autowired
     private BidRepository bidRepository;
     private BidCollectionRepository bidCollectionRepository;
 
-    public void enqueueBid(Long collectionId,String bidValue,Long userId){
-        bidQueue.computeIfAbsent(collectionId, k -> new LinkedList<>()).offer(bidValue);
+    @Autowired
+    public BidQueueManager(BidRepository bidRepository, BidCollectionRepository bidCollectionRepository){
+        this.bidCollectionRepository = bidCollectionRepository;
+        this.bidRepository = bidRepository;
     }
+    private final Queue<Bid> bidQueue = new LinkedList<>();
 
-    public String dequeueBid(Long collectionId){
-        Queue<String> queue = bidQueue.getOrDefault(collectionId, new LinkedList<>());
-        return queue.poll();
+    public void enqueueBid(Bid bid){
+        bidQueue.add(bid);
     }
 
     @Override
     public void onApplicationEvent(BidPlacedEvent event){
-        String newBidValue = event.getBid();
-        Long collectionId = event.getCollectionId();
-        Long userId = event.getUserId();
-
-        List<Bid> existingBids = bidRepository.findBycollectionIdOrderByBidValueDesc(collectionId);
-        if(!existingBids.isEmpty()){
-            String highestBid = existingBids.get(0).getBidValue();
-            if(newBidValue.compareTo(highestBid)<=0){
-                System.out.println("wrong bid value XXXXXXXXXXXXXX");
-                return;
-            }
-        }
-
-        enqueueBid(collectionId,newBidValue,userId);
 
         Bid newBid = new Bid();
-        newBid.setBidValue(newBidValue);
-        newBid.setCollectionId(collectionId);
-        newBid.setUserId(userId);
-        bidRepository.save(newBid);
+        newBid.setBidValue(event.getBid());
+        newBid.setCollectionId(event.getCollectionId());
+        newBid.setUserId(event.getUserId());
+
+        BidCollection lotCollection = bidCollectionRepository.findOneBylotId(event.getCollectionId());
+
+        if(lotCollection.getCurrentHighestBid() == null && lotCollection.getHighestBidUserId() == null){
+            if(Integer.parseInt(newBid.getBidValue()) <= Integer.parseInt(lotCollection.getStartingValue())){
+                    //throw exception here
+                System.out.println("Invald 1 ");
+                return;
+            }
+            enqueueBid(newBid);
+            lotCollection.setCurrentHighestBid(newBid.getBidValue());
+            lotCollection.setHighestBidUserId(newBid.getUserId());
+            bidRepository.save(newBid);
+            bidCollectionRepository.save(lotCollection);
+        }else{
+            if(bidQueue.isEmpty()){
+                if(Integer.parseInt(newBid.getBidValue()) < Integer.parseInt(lotCollection.getCurrentHighestBid())){
+                    //throw exception here
+                    System.out.println("Invald 2 ");
+                    return;
+                }
+                enqueueBid(newBid);
+                lotCollection.setCurrentHighestBid(newBid.getBidValue());
+                lotCollection.setHighestBidUserId(newBid.getUserId());
+                bidRepository.save(newBid);
+                bidCollectionRepository.save(lotCollection);
+            }
+            else{
+                System.out.println(bidQueue.poll().getBidValue());
+                if (Integer.parseInt(newBid.getBidValue()) > Integer.parseInt(bidRepository.findBycollectionIdOrderByBidValueDesc(newBid.getCollectionId()).get(0).getBidValue())) {
+                    bidQueue.add(newBid);
+                    lotCollection.setCurrentHighestBid(newBid.getBidValue());
+                    lotCollection.setHighestBidUserId(newBid.getUserId());
+                    bidRepository.save(newBid);
+                    bidCollectionRepository.save(lotCollection);
+                } else {
+                    //thorow exception here
+                    System.out.println("New bid's value is not greater than the last bid's value.");
+                    return;
+                }
+            }
+        }
     }
 }

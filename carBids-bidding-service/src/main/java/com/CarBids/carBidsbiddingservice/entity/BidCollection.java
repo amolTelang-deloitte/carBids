@@ -1,6 +1,7 @@
 package com.CarBids.carBidsbiddingservice.entity;
 
 import com.CarBids.carBidsbiddingservice.Event.EventManager.BidQueueManager;
+import com.CarBids.carBidsbiddingservice.enums.CollectionStatus;
 import lombok.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -18,22 +19,15 @@ public class BidCollection {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long collectionId;
     @NonNull
-    private Long lotid;
+    private Long lotId;
     private String currentHighestBid;
+    private Long highestBidUserId;
     @NonNull
-    private String biddingStatus;
+    private CollectionStatus biddingStatus;
     @NonNull
     private String startingValue;
     @NonNull
     private LocalDateTime startTimestamp;
-    @NonNull
     private LocalDateTime endTimeStamp;
-
-    @Autowired
-    private transient BidQueueManager bidQueueManager;
-
-    public void placeBid(String bidValue,Long lotId,Long userId){
-        bidQueueManager.enqueueBid(lotId,bidValue,userId);
-    }
 
 }
