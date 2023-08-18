@@ -47,7 +47,12 @@ public class LotService implements ILotService {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(newLot);
     }
-    
+
+    @Override
+    public ResponseEntity<?> getAllLot() {
+        return new ResponseEntity<>(lotRepository.findAll(), HttpStatus.FOUND);
+    }
+
     @Override
     public ResponseEntity<?> getFilteredLot(String modelYear, String transmissionType, String bodyType ) {
         Specification<Lot> specification = LotSpecification.withCriteria(modelYear, transmissionType, bodyType);

@@ -46,7 +46,12 @@ public class LotController {
             @RequestParam(required = false)String bodyType,
             @RequestParam(required = false)String transmissionType
             ){
-        return lotService.getFilteredLot(modelYear,bodyType,transmissionType);
+            return lotService.getFilteredLot(modelYear,bodyType,transmissionType);
     }
 
+    //get all listing
+    @GetMapping("/getAll")
+    public ResponseEntity<?> getAllLot(){
+        return lotService.getAllLot();
+    }
 }
