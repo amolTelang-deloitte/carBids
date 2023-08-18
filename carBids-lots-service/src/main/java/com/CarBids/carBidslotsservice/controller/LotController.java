@@ -1,6 +1,8 @@
 package com.CarBids.carBidslotsservice.controller;
 
 import com.CarBids.carBidslotsservice.dto.CarDetails;
+import com.CarBids.carBidslotsservice.enums.CarEnum.BodyType;
+import com.CarBids.carBidslotsservice.enums.CarEnum.TransmissionType;
 import com.CarBids.carBidslotsservice.service.ILotService;
 import com.CarBids.carBidslotsservice.util.JwtUtil;
 import io.jsonwebtoken.Claims;
@@ -35,6 +37,16 @@ public class LotController {
         else{
             throw new RuntimeException("missing authorization header");
         }
+    }
+
+    //filter listing by model year, Transmission Type, Body Style
+    @GetMapping("/filter")
+    public ResponseEntity<?> filterBasedOnProperty(
+            @RequestParam(required = false)String modelYear,
+            @RequestParam(required = false)String bodyType,
+            @RequestParam(required = false)String transmissionType
+            ){
+        return lotService.getFilteredLot(modelYear,bodyType,transmissionType);
     }
 
 }

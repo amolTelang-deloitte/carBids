@@ -6,11 +6,14 @@ import com.CarBids.carBidslotsservice.enums.CarEnum.BodyType;
 import com.CarBids.carBidslotsservice.enums.CarEnum.TransmissionType;
 import com.CarBids.carBidslotsservice.enums.LotEnum.LotStatus;
 import com.CarBids.carBidslotsservice.repository.LotRepository;
+import com.CarBids.carBidslotsservice.specification.LotSpecification;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class LotService implements ILotService {
@@ -43,6 +46,13 @@ public class LotService implements ILotService {
         lotRepository.save(newLot);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(newLot);
+    }
+    
+    @Override
+    public ResponseEntity<?> getFilteredLot(String modelYear, String transmissionType, String bodyType ) {
+        Specification<Lot> specification = LotSpecification.withCriteria(modelYear, transmissionType, bodyType);
+        List<Lot> filteredLot = lotRepository.findAll(specification);
+        return new ResponseEntity<>(filteredLot,HttpStatus.FOUND);
     }
 
     @Override
