@@ -1,8 +1,10 @@
 package com.CarBids.carBidsbiddingservice.repository;
 
-import com.CarBids.carBidsbiddingservice.entity.BidCollection;
+import com.CarBids.carBidsbiddingservice.entity.Bid;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface BidRepository extends JpaRepository<BidCollection, Long> {
+import java.util.List;
 
+public interface BidRepository extends JpaRepository<Bid, Long> {
+    List<Bid> findBycollectionIdOrderByBidValueDesc(Long collectionId);
 }
