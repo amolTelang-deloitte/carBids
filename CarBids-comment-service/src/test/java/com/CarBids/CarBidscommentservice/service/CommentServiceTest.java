@@ -220,7 +220,7 @@ public class CommentServiceTest {
 
         // Assert
         assertNotNull(responseEntity);
-        assertEquals(HttpStatus.NO_CONTENT, responseEntity.getStatusCode());
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         verify(repository, times(1)).delete(reply);
     }
 
@@ -317,7 +317,7 @@ public class CommentServiceTest {
 
         // Assert
         verify(commentRepository).delete(comment);
-        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 
     @Test
@@ -360,7 +360,7 @@ public class CommentServiceTest {
         assertDoesNotThrow(() -> {
             ResponseEntity<?> response = commentService.deleteComment(commentId, userId);
             verify(commentRepository).delete(comment);
-            assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+            assertEquals(HttpStatus.OK, response.getStatusCode());
         });
     }
 

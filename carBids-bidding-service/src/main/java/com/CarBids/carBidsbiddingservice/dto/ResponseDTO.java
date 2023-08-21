@@ -4,13 +4,14 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.http.HttpStatus;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
-public class BidDetails {
-    private Long lotId;
-    private String bidValue;
+public class ResponseDTO<T> {
+    private HttpStatus status;
+    private String message;
+    private T data;
 }
-

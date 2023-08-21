@@ -41,7 +41,6 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
 
     }
 
-    //generic exception
     @ExceptionHandler(value = Exception.class)
     public ResponseEntity<?> handleGenericException(final Exception exception, WebRequest request){
         HttpStatus unauth = HttpStatus.UNAUTHORIZED;

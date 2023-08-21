@@ -12,6 +12,7 @@ import com.CarBids.CarBidscommentservice.feignClient.LotFeignClient;
 import com.CarBids.CarBidscommentservice.repository.CommentRepository;
 import com.CarBids.CarBidscommentservice.repository.ReplyRepository;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import feign.FeignException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.net.ConnectException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -69,7 +71,7 @@ public class CommentService implements ICommentService{
                 .build();
         commentRepository.save(newComment);
         ResponseDTO<Object> responseDTO = ResponseDTO.builder()
-                .status(HttpStatus.OK)
+                .status(HttpStatus.CREATED)
                 .message("Successfully added comment")
                 .data(newComment)
                 .build();
@@ -96,7 +98,7 @@ public class CommentService implements ICommentService{
                 .build();
         repository.save(reply);
         ResponseDTO<Object> responseDTO = ResponseDTO.builder()
-                .status(HttpStatus.OK)
+                .status(HttpStatus.CREATED)
                 .message("Successfully added reply to comment")
                 .data(reply)
                 .build();
@@ -131,7 +133,7 @@ public class CommentService implements ICommentService{
                 .status(HttpStatus.NO_CONTENT)
                 .message("successfully deleted comment")
                 .build();
-        return new ResponseEntity<>(responseDTO,HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>(responseDTO,HttpStatus.OK);
     }
 
     @Override
@@ -139,15 +141,15 @@ public class CommentService implements ICommentService{
         logger.info("Attempting to delete reply"+" "+replyId+" "+LocalDateTime.now());
         Reply reply = repository.findById(replyId)
                 .orElseThrow(() -> new InvalidIdException("Invalid Reply Id! Please check again"));
-        if(reply.getParentComment().equals(userId))
+        if(!reply.getParentComment().equals(userId))
             throw new InvalidIdException("Cant delete, Invalid Credentials");
         repository.delete(reply);
         ResponseDTO<Object> responseDTO = ResponseDTO.builder()
-                .status(HttpStatus.OK)
+                .status(HttpStatus.NO_CONTENT)
                 .message("successfully deleted reply")
                 .data(reply)
                 .build();
-        return new ResponseEntity<>(responseDTO,HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>(responseDTO,HttpStatus.OK);
 
 
     }
@@ -172,15 +174,15 @@ public class CommentService implements ICommentService{
         }
     }
 
-    @HystrixCommand(groupKey = "lot", commandKey = "lotStatus",fallbackMethod = "lotServiceFallback")
-    public Boolean checkLotStatus(Long lotId){
-        ResponseEntity<UserIdCheck> response = lotFeignClient.checkLotStatus(lotId);
-        if(response.getStatusCode().is2xxSuccessful()){
-            return response.getBody().getCheck();
-        }else{
-            throw new InvalidIdException("Invalid LotId,Check again");
+    @HystrixCommand(fallbackMethod = "lotServiceFallback")
+    public Boolean checkLotStatus(Long lotId) {
+            ResponseEntity<UserIdCheck> response = lotFeignClient.checkLotStatus(lotId);
+            if(response.getStatusCode().is2xxSuccessful()){
+                return response.getBody().getCheck();
+            }else{
+                throw new InvalidIdException("Invalid LotId,Check again");
+            }
         }
-    }
 
     public ResponseEntity<?> authServiceFallback(){
         FallbackResponse fallbackResponse = FallbackResponse.builder()
@@ -191,7 +193,7 @@ public class CommentService implements ICommentService{
         return new ResponseEntity<>(fallbackResponse,HttpStatus.SERVICE_UNAVAILABLE);
     }
 
-    public ResponseEntity<?> lotServiceFallback(){
+    public ResponseEntity<?> lotServiceFallback(Long lotId){
         FallbackResponse fallbackResponse = FallbackResponse.builder()
                 .message("Lot Service is down, Try again later.")
                 .timeStamp(LocalDateTime.now())

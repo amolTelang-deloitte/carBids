@@ -68,8 +68,13 @@ public class BidService implements IBidService{
         String username = getUsername(userId);
         logger.info("Bid event published"+" "+LocalDateTime.now());
         eventPublisher.publishEvent(new BidPlacedEvent(this,bidDetails.getLotId(),userId, username, bidDetails.getBidValue()));
+        ResponseDTO responseDTO = ResponseDTO.builder()
+                .status(HttpStatus.CREATED)
+                .message("Successfully placed bid")
+                .data(bidDetails)
+                .build();
         logger.info("Successfully saved a Bid in Database"+" "+LocalDateTime.now());
-        return new ResponseEntity<>("createdBid",HttpStatus.CREATED);
+        return new ResponseEntity<>(responseDTO,HttpStatus.OK);
     }
 
     @Override
@@ -78,7 +83,11 @@ public class BidService implements IBidService{
                 collection.setBiddingStatus(CollectionStatus.CLOSED);
                 bidCollectionRepository.save(collection);
         logger.info("Successfully Closed Lot"+" "+lotId+" "+LocalDateTime.now());
-        return new ResponseEntity<>("successfully closed bidding no longer available",HttpStatus.OK);
+        ResponseDTO responseDTO = ResponseDTO.builder()
+                .status(HttpStatus.OK)
+                .message("Successfully placed bid")
+                .build();
+        return new ResponseEntity<>(responseDTO,HttpStatus.OK);
     }
 
     @Override
