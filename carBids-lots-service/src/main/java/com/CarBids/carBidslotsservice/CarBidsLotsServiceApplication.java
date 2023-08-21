@@ -6,6 +6,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.circuitbreaker.EnableCircuitBreaker;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.cloud.netflix.hystrix.EnableHystrix;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
@@ -15,7 +16,7 @@ import java.time.LocalDateTime;
 @EnableDiscoveryClient
 @EnableScheduling
 @EnableFeignClients
-@EnableCircuitBreaker
+@EnableHystrix
 public class CarBidsLotsServiceApplication {
 	private static final Logger logger = LoggerFactory.getLogger(CarBidsLotsServiceApplication.class);
 

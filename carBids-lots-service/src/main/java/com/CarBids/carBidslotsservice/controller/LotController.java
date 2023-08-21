@@ -1,6 +1,7 @@
 package com.CarBids.carBidslotsservice.controller;
 
 import com.CarBids.carBidslotsservice.dto.CarDetails;
+import com.CarBids.carBidslotsservice.dto.ResponseDTO;
 import com.CarBids.carBidslotsservice.enums.CarEnum.BodyType;
 import com.CarBids.carBidslotsservice.enums.CarEnum.TransmissionType;
 import com.CarBids.carBidslotsservice.exception.exceptions.InvalidAuthException;
@@ -76,6 +77,11 @@ public class LotController {
     @GetMapping("/get/getLot")
     public ResponseEntity<?> getLotById(@RequestParam(required = true)Long lotId){
         return lotService.getLotbyId(lotId);
+    }
+
+    @GetMapping("/get/checkUserId")
+    public ResponseDTO testUserId(@RequestParam(required = true)Long lotId) {
+        return lotService.checkUserId(lotId);
     }
 
     @GetMapping("/check/lotId")

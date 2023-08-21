@@ -56,7 +56,9 @@ public class BidService implements IBidService{
 
     @Override
     public ResponseEntity<?> addBid(BidDetails bidDetails, Long userId) {
-        if(!checkUserId(userId)){
+
+        ResponseDTO responseDTO = checkUserId(userId);
+        if(responseDTO.getData().equals(false)){
             logger.error("Invalid user Id entered"+" "+LocalDateTime.now());
             throw new InvalidUserException("Invalid User Id, Check again");
         }
@@ -68,13 +70,13 @@ public class BidService implements IBidService{
         String username = getUsername(userId);
         logger.info("Bid event published"+" "+LocalDateTime.now());
         eventPublisher.publishEvent(new BidPlacedEvent(this,bidDetails.getLotId(),userId, username, bidDetails.getBidValue()));
-        ResponseDTO responseDTO = ResponseDTO.builder()
+        ResponseDTO finalresponseDTO = ResponseDTO.builder()
                 .status(HttpStatus.CREATED)
                 .message("Successfully placed bid")
                 .data(bidDetails)
                 .build();
         logger.info("Successfully saved a Bid in Database"+" "+LocalDateTime.now());
-        return new ResponseEntity<>(responseDTO,HttpStatus.OK);
+        return new ResponseEntity<>(finalresponseDTO,HttpStatus.OK);
     }
 
     @Override
@@ -107,7 +109,7 @@ public class BidService implements IBidService{
         return collectionDTO;
     }
 
-    @HystrixCommand(groupKey = "auth", commandKey = "username",fallbackMethod = "authServiceFallback")
+    @HystrixCommand(fallbackMethod = "usernameFallback")
     public String getUsername(Long userId){
         String username = authFeignClient.getUsername(userId);
         if(username.isEmpty())
@@ -118,25 +120,36 @@ public class BidService implements IBidService{
         return username;
     }
 
-    @HystrixCommand(groupKey = "auth", commandKey = "userId",fallbackMethod = "authServiceFallback")
-    public Boolean checkUserId(Long userId){
+    @HystrixCommand(fallbackMethod = "authServiceFallback")
+    public ResponseDTO checkUserId(Long userId){
 
         ResponseEntity<UserIdCheck> response = authFeignClient.checkUserId(userId);
         if (response.getStatusCode().is2xxSuccessful()) {
-            logger.info("Validated"+" "+userId+" "+LocalDateTime.now());
-            return response.getBody().getCheck();
+            ResponseDTO responseDTO = ResponseDTO.builder()
+                    .status(HttpStatus.OK)
+                    .data(response.getBody().getCheck())
+                    .build();
+            return responseDTO;
         } else {
             throw new InvalidDataException("Invalid UserId");
         }
 
     }
 
-    public ResponseEntity<?> authServiceFallback(){
+    public ResponseDTO authServiceFallback(Long userId){
         FallbackResponse fallbackResponse = FallbackResponse.builder()
-                .message("Authentication Service is down, Try again later.")
+                .message("One or more service is down, Try again later.")
                 .timeStamp(LocalDateTime.now())
                 .httpCode(HttpStatus.SERVICE_UNAVAILABLE)
                 .build();
-        return new ResponseEntity<>(fallbackResponse,HttpStatus.SERVICE_UNAVAILABLE);
+        ResponseDTO responseDTO = ResponseDTO.builder()
+                .status(HttpStatus.SERVICE_UNAVAILABLE)
+                .data(fallbackResponse)
+                .build();
+        return responseDTO;
     }
+    public String usernameFallback(Long userId){
+        return " One or more service is down, Try again later";
+    }
+
 }

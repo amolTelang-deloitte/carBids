@@ -1,6 +1,7 @@
 package com.CarBids.carBidslotsservice.service;
 
 import com.CarBids.carBidslotsservice.dto.CarDetails;
+import com.CarBids.carBidslotsservice.dto.ResponseDTO;
 import org.springframework.http.ResponseEntity;
 
 public interface ILotService {
@@ -15,6 +16,7 @@ public interface ILotService {
     ResponseEntity<?>checkLotId(Long lotId);
     ResponseEntity<?>checkLotStatus(Long lotId);
     ResponseEntity<?>getClosedListings();
+    ResponseDTO checkUserId(Long id);
    // void closeExpiredLots();
 
 
