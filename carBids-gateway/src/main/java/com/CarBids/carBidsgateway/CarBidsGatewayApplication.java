@@ -1,5 +1,8 @@
 package com.CarBids.carBidsgateway;
 
+import com.CarBids.carBidsgateway.filter.AuthenticationFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -15,8 +18,10 @@ import java.util.List;
 @EnableDiscoveryClient
 public class CarBidsGatewayApplication {
 
+	private final static Logger logger = LoggerFactory.getLogger(CarBidsGatewayApplication.class);
 	public static void main(String[] args) {
 		SpringApplication.run(CarBidsGatewayApplication.class, args);
+		logger.info("Starting Car Bids gateway application on port 8090");
 
 	}
 	@Autowired

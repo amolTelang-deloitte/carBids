@@ -7,6 +7,8 @@ import com.CarBids.carBidslotsservice.exception.exceptions.InvalidAuthException;
 import com.CarBids.carBidslotsservice.service.ILotService;
 import com.CarBids.carBidslotsservice.util.JwtUtil;
 import io.jsonwebtoken.Claims;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +20,7 @@ import javax.servlet.http.HttpServletRequest;
 @RequestMapping("/api/lot")
 public class LotController {
 
+    private static final Logger logger = LoggerFactory.getLogger(LotController.class);
     private final ILotService lotService;
     private final JwtUtil jwtUtil;
 
@@ -30,12 +33,15 @@ public class LotController {
     @PostMapping("/create")
     public ResponseEntity<?> createLot(@RequestBody CarDetails carDetails, HttpServletRequest request){
         String authorizationHeader = request.getHeader("Authorization");
+        logger.info("Attempting to create lot");
         if(authorizationHeader != null && authorizationHeader.startsWith("Bearer ")){
             authorizationHeader = authorizationHeader.substring(7);
             Long userId = Long.parseLong(jwtUtil.getUserIdFromToken(authorizationHeader));
+            logger.info("User successfully verified");
             return lotService.saveLot(carDetails,userId);
         }
         else{
+            logger.error("Invalid JWT Token");
             throw new InvalidAuthException("Invalid Credentials");
         }
     }
@@ -85,12 +91,15 @@ public class LotController {
     @PostMapping("/end/premature")
     public ResponseEntity<?> clostLotPremature(@RequestParam(required = true)Long lotId,HttpServletRequest request){
         String authorizationHeader = request.getHeader("Authorization");
+        logger.info("Attempting to create lot");
         if(authorizationHeader != null && authorizationHeader.startsWith("Bearer ")){
             authorizationHeader = authorizationHeader.substring(7);
+            logger.info("User successfully verified");
             Long userId = Long.parseLong(jwtUtil.getUserIdFromToken(authorizationHeader));
             return lotService.closeLotPremature(lotId,userId);
         }
         else{
+            logger.error("Invalid JWT Token");
             throw new InvalidAuthException("Invalid Credentials");
         }
     }

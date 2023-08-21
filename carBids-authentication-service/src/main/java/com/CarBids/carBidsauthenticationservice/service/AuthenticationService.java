@@ -6,6 +6,8 @@ import com.CarBids.carBidsauthenticationservice.exception.exceptions.InvalidIdEx
 import com.CarBids.carBidsauthenticationservice.exception.exceptions.UserAlreadyExistsException;
 import com.CarBids.carBidsauthenticationservice.repository.UserRepository;
 import com.CarBids.carBidsauthenticationservice.entity.User;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,14 +17,16 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.regex.Pattern;
 
 
 @Service
 public class AuthenticationService implements IAuthenticationService, UserDetailsService {
+    private static final Logger logger = LoggerFactory.getLogger(AuthenticationService.class);
     private final UserRepository userRepository;
-
     private final PasswordEncoder passwordEncoder;
     private final IJwtService jwtService;
 
@@ -37,32 +41,40 @@ public class AuthenticationService implements IAuthenticationService, UserDetail
     public UsernamePasswordAuthenticationToken authenticateUser(String username, String password){
 
         if(!isBase64Encoded(password)){
+            logger.error("Incorrect Base64 encodec password" + " "+ LocalDateTime.now());
             throw new InvalidBase64Exception("Incorrect Base64 encoded password");
         }
         String decodedPassword = new String(Base64.getDecoder().decode(password));
+        logger.info("Decoded Base64 encoded password"+" "+LocalDateTime.now());
         return  new UsernamePasswordAuthenticationToken(username, decodedPassword);
     }
 
     @Override
     public ResponseEntity<?> saveUser(User userDetails){
         if(userRepository.existsByEmailOrPhoneNumber(userDetails.getEmail(),userDetails.getPhoneNumber())){
+            logger.warn("User already exists in the database" + " "+ LocalDateTime.now());
             throw new UserAlreadyExistsException("User with same credentials already exists");
         }
         if(!isBase64Encoded(userDetails.getPassword())){
+            logger.error("Incorrect Base64 encoded password entered" + " "+ LocalDateTime.now());
             throw new InvalidBase64Exception("Incorrect Base64 encoded password");
         }
         if(userRepository.existsByusername(userDetails.getUsername())){
+            logger.warn("User with same username "+" "+userDetails.getUsername()+" "+ "already exists in the database." + " "+ LocalDateTime.now());
             throw new UserAlreadyExistsException("Username already exists choose a differnt one");
         }
         if(!isValidEmail(userDetails.getEmail()))
         {
+            logger.warn("User with same email "+" "+userDetails.getEmail()+" "+ "already exists in the database." + " "+ LocalDateTime.now());
             throw new InvalidCredentialsException("Invalid Email has been entered");
         }
         if(isValidPhoneNo(userDetails.getPhoneNumber())){
+            logger.warn("User with same Phone number "+" "+userDetails.getPhoneNumber()+" "+ "already exists in the database." + " "+ LocalDateTime.now());
             throw new InvalidCredentialsException("Invalid Phone Number has been entered");
         }
        userDetails.setPassword(passwordEncoder.encode(new String(Base64.getDecoder().decode(userDetails.getPassword()))));
        userRepository.save(userDetails);
+        logger.info("User successfully added into database"+" "+LocalDateTime.now());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body("User added successfully");
     }
@@ -70,7 +82,6 @@ public class AuthenticationService implements IAuthenticationService, UserDetail
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByusername(username);
-        //User user = userOptional.orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
         return org.springframework.security.core.userdetails.User.builder()
                 .username(user.getUsername())
                 .password(user.getPassword())
@@ -81,6 +92,7 @@ public class AuthenticationService implements IAuthenticationService, UserDetail
     @Override
     public String getUsernameFromId(long userId) {
         User user = userRepository.findById(userId).orElseThrow(()->new InvalidIdException("Invalid User Exception"));
+        logger.info("User successfully retrived from database"+" "+LocalDateTime.now());
         String username= user.getUsername();
         return username;
     }
@@ -104,8 +116,10 @@ public class AuthenticationService implements IAuthenticationService, UserDetail
     public static boolean isBase64Encoded(String input) {
         try {
             Base64.getDecoder().decode(input);
+            logger.info("Entered password is Base64 encoded"+" "+LocalDateTime.now());
             return Pattern.matches("^[A-Za-z0-9+/]*[=]{0,2}$", input);
         } catch (IllegalArgumentException ex) {
+            logger.warn("Entered password is not Base64 encoded"+" "+LocalDateTime.now());
             return false;
         }
     }
