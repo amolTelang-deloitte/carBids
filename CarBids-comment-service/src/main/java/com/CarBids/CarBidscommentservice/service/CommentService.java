@@ -1,6 +1,7 @@
 package com.CarBids.CarBidscommentservice.service;
 
 import com.CarBids.CarBidscommentservice.dto.FallbackResponse;
+import com.CarBids.CarBidscommentservice.dto.ResponseDTO;
 import com.CarBids.CarBidscommentservice.dto.UserIdCheck;
 import com.CarBids.CarBidscommentservice.entity.Comment;
 import com.CarBids.CarBidscommentservice.entity.Reply;
@@ -67,7 +68,12 @@ public class CommentService implements ICommentService{
                 .lotId(lotId)
                 .build();
         commentRepository.save(newComment);
-        return new ResponseEntity<>("done", HttpStatus.OK);
+        ResponseDTO<Object> responseDTO = ResponseDTO.builder()
+                .status(HttpStatus.OK)
+                .message("Successfully added comment")
+                .data(newComment)
+                .build();
+        return new ResponseEntity<>(responseDTO,HttpStatus.OK);
     }
 
     @Override
@@ -89,7 +95,12 @@ public class CommentService implements ICommentService{
                 .parentUserId(userId)
                 .build();
         repository.save(reply);
-        return new ResponseEntity<>("added comment",HttpStatus.OK);
+        ResponseDTO<Object> responseDTO = ResponseDTO.builder()
+                .status(HttpStatus.OK)
+                .message("Successfully added reply to comment")
+                .data(reply)
+                .build();
+        return new ResponseEntity<>(responseDTO,HttpStatus.OK);
     }
 
     @Override
@@ -97,7 +108,12 @@ public class CommentService implements ICommentService{
         if(!checkLotId(lotId))
             throw new InvalidIdException("Invald Lot Id, Check again");
         List<Comment> comment = commentRepository.findAllBylotId(lotId);
-        return new ResponseEntity<>(comment,HttpStatus.OK);
+        ResponseDTO<Object> responseDTO = ResponseDTO.builder()
+                .status(HttpStatus.OK)
+                .message("all comments for lot"+" "+lotId)
+                .data(comment)
+                .build();
+        return new ResponseEntity<>(responseDTO,HttpStatus.OK);
 
     }
 
@@ -106,12 +122,16 @@ public class CommentService implements ICommentService{
         logger.info("Attempting to delete comment"+" "+commentId+" "+LocalDateTime.now());
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new InvalidIdException("Invalid Comment Id! Please check again"));
-        if(comment.getParentUserId().equals(userId)){
+        if(!comment.getParentUserId().equals(userId)){
             logger.warn("Invalid User attempting to delete comment"+" "+LocalDateTime.now());
             throw new InvalidIdException("Cant delete, Invalid Credentials");
         }
         commentRepository.delete(comment);
-        return new ResponseEntity<>("Comment deleted successfully",HttpStatus.NO_CONTENT);
+        ResponseDTO<Object> responseDTO = ResponseDTO.builder()
+                .status(HttpStatus.NO_CONTENT)
+                .message("successfully deleted comment")
+                .build();
+        return new ResponseEntity<>(responseDTO,HttpStatus.NO_CONTENT);
     }
 
     @Override
@@ -121,9 +141,13 @@ public class CommentService implements ICommentService{
                 .orElseThrow(() -> new InvalidIdException("Invalid Reply Id! Please check again"));
         if(reply.getParentComment().equals(userId))
             throw new InvalidIdException("Cant delete, Invalid Credentials");
-
         repository.delete(reply);
-        return new ResponseEntity<>("Reply deleted successfully",HttpStatus.NO_CONTENT);
+        ResponseDTO<Object> responseDTO = ResponseDTO.builder()
+                .status(HttpStatus.OK)
+                .message("successfully deleted reply")
+                .data(reply)
+                .build();
+        return new ResponseEntity<>(responseDTO,HttpStatus.NO_CONTENT);
 
 
     }

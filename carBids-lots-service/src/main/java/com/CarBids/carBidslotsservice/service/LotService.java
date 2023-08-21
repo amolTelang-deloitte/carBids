@@ -44,7 +44,7 @@ public class LotService implements ILotService {
     }
 
     @Override
-    @HystrixCommand(groupKey = "bidding", commandKey = "startBidding",fallbackMethod = "biddingServiceFallback")
+    //@HystrixCommand(groupKey = "bidding", commandKey = "startBidding",fallbackMethod = "biddingServiceFallback")
     public ResponseEntity<?> saveLot(CarDetails carDetails,Long userId) {
 
        if(!Arrays.stream(TransmissionType.values())
@@ -146,7 +146,7 @@ public class LotService implements ILotService {
     }
 
     @Override
-    @HystrixCommand(groupKey = "bidding", commandKey = "closeBidding",fallbackMethod = "biddingServiceFallback")
+   // @HystrixCommand(groupKey = "bidding", commandKey = "closeBidding",fallbackMethod = "biddingServiceFallback")
     public ResponseEntity<?> getLotbyId(Long lotId) {
         Lot lot = lotRepository.findById(lotId)
                 .orElseThrow(() -> new InvalidIdException("Invalid Lot Id, Check again"));
@@ -185,7 +185,7 @@ public class LotService implements ILotService {
 
 
     @Override
-    @HystrixCommand(groupKey = "bidding", commandKey = "closeBidding",fallbackMethod = "biddingServiceFallback")
+   // @HystrixCommand(groupKey = "bidding", commandKey = "closeBidding",fallbackMethod = "biddingServiceFallback")
     public ResponseEntity<?> closeLotPremature(Long lotId,Long userId) {
         logger.info("Attempting to close lot by lotId "+" "+lotId+" "+LocalDateTime.now());
         Lot lot = lotRepository.findById(lotId)
@@ -216,7 +216,7 @@ public class LotService implements ILotService {
         return Integer.parseInt(modelYear) <= currentYear;
     }
 
-    @HystrixCommand(groupKey = "auth", commandKey = "username",fallbackMethod = "authServiceFallback")
+   // @HystrixCommand(groupKey = "auth", commandKey = "username",fallbackMethod = "authServiceFallback")
     public String getUsername(Long userId){
         String username = authFeignClient.getUsername(userId);
         if(username.isEmpty())
@@ -241,7 +241,7 @@ public class LotService implements ILotService {
         return new ResponseEntity<>(true,HttpStatus.OK);
     }
 
-    @HystrixCommand(groupKey = "auth", commandKey = "userId",fallbackMethod = "authServiceFallback")
+   // @HystrixCommand(groupKey = "auth", commandKey = "userId",fallbackMethod = "authServiceFallback")
     public Boolean checkUserId(Long userId){
 
         ResponseEntity<UserIdCheck> response = authFeignClient.checkUserId(userId);
