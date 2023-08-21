@@ -1,9 +1,7 @@
 package com.CarBids.carBidsbiddingservice.entity;
 
-import com.CarBids.carBidsbiddingservice.Event.EventManager.BidQueueManager;
 import com.CarBids.carBidsbiddingservice.enums.CollectionStatus;
 import lombok.*;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -22,6 +20,9 @@ public class BidCollection {
     private Long lotId;
     private String currentHighestBid;
     private Long highestBidUserId;
+    private String highestBidUsername;
+    @Column(columnDefinition = "integer default 0")
+    private Integer noOfBids;
     @NonNull
     private CollectionStatus biddingStatus;
     @NonNull

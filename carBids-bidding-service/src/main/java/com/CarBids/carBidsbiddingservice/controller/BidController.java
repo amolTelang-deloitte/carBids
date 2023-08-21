@@ -1,6 +1,7 @@
 package com.CarBids.carBidsbiddingservice.controller;
 
 import com.CarBids.carBidsbiddingservice.dto.BidDetails;
+import com.CarBids.carBidsbiddingservice.dto.CollectionDTO;
 import com.CarBids.carBidsbiddingservice.dto.CollectionDetails;
 import com.CarBids.carBidsbiddingservice.service.IBidService;
 import com.CarBids.carBidsbiddingservice.util.JwtUtil;
@@ -39,6 +40,11 @@ public class BidController {
         else{
             throw new RuntimeException("missing authorization header");
         }
+    }
+
+    @GetMapping("/get/collection")
+    public CollectionDTO getCollection(@RequestParam(required = true)Long lotId){
+        return bidService.getCollection(lotId);
     }
 
     @PutMapping("/close")

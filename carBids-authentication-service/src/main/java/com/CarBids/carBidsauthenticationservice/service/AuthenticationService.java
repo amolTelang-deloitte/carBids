@@ -2,9 +2,10 @@ package com.CarBids.carBidsauthenticationservice.service;
 
 import com.CarBids.carBidsauthenticationservice.exception.exceptions.InvalidBase64Exception;
 import com.CarBids.carBidsauthenticationservice.exception.exceptions.InvalidCredentialsException;
+import com.CarBids.carBidsauthenticationservice.exception.exceptions.InvalidIdException;
 import com.CarBids.carBidsauthenticationservice.exception.exceptions.UserAlreadyExistsException;
-import com.CarBids.carBidscommonentites.User;
 import com.CarBids.carBidsauthenticationservice.repository.UserRepository;
+import com.CarBids.carBidsauthenticationservice.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,18 +16,18 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.Base64;
-import java.util.Optional;
 import java.util.regex.Pattern;
 
 
 @Service
 public class AuthenticationService implements IAuthenticationService, UserDetailsService {
     private final UserRepository userRepository;
+
     private final PasswordEncoder passwordEncoder;
     private final IJwtService jwtService;
 
     @Autowired
-    public AuthenticationService(UserRepository userRepository, PasswordEncoder passwordEncoder, IJwtService jwtService){
+    public AuthenticationService(UserRepository userRepository,PasswordEncoder passwordEncoder, IJwtService jwtService){
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
@@ -68,8 +69,8 @@ public class AuthenticationService implements IAuthenticationService, UserDetail
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Optional<User> userOptional = userRepository.findByusername(username);
-        User user = userOptional.orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
+        User user = userRepository.findByusername(username);
+        //User user = userOptional.orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
         return org.springframework.security.core.userdetails.User.builder()
                 .username(user.getUsername())
                 .password(user.getPassword())
@@ -78,9 +79,21 @@ public class AuthenticationService implements IAuthenticationService, UserDetail
     }
 
     @Override
+    public String getUsernameFromId(long userId) {
+        User user = userRepository.findById(userId).orElseThrow(()->new InvalidIdException("Invalid User Exception"));
+        String username= user.getUsername();
+        return username;
+    }
+
+    @Override
+    public ResponseEntity<?> checkValidUserId(long userId) {
+        return new ResponseEntity<>(userRepository.existsById(userId), HttpStatus.OK) ;
+    }
+
+    @Override
     public String generateToken(String username){
-        Optional<User> userOptional = userRepository.findByusername(username);
-        return jwtService.generateToken(username,userOptional.get().getUserId());
+        User userOptional = userRepository.findByusername(username);
+        return jwtService.generateToken(username,userOptional.getUserId());
     }
 
     @Override

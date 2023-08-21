@@ -22,7 +22,6 @@ public class CarDetails {
     private List<String> carPhotosURI = new ArrayList<>();
     private String listerComment;
     private String startingValue;
-    private String minBidValue;
     private Date endDate;
 
 }

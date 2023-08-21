@@ -1,6 +1,6 @@
 package com.CarBids.carBidsauthenticationservice.controller;
 
-import com.CarBids.carBidscommonentites.User;
+import com.CarBids.carBidsauthenticationservice.entity.User;
 import com.CarBids.carBidsauthenticationservice.service.AuthenticationService;
 import com.CarBids.carBidsauthenticationservice.service.IAuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,23 +26,32 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> authenticateUser(@RequestParam String username, @RequestParam String password) {
-        UsernamePasswordAuthenticationToken authenticationToken = authenticationService.authenticateUser(username,password);
-        try {
-            Authentication authentication = authenticationManager.authenticate(authenticationToken);
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            String access_token = authenticationService.generateToken(userDetails.getUsername());
-            return ResponseEntity.ok().body(access_token);
-        } catch (AuthenticationException e) {
-            // Handle authentication failure
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Credentials ! plaese");
+            public ResponseEntity<String> authenticateUser(@RequestParam String username, @RequestParam String password) {
+                UsernamePasswordAuthenticationToken authenticationToken = authenticationService.authenticateUser(username,password);
+                try {
+                    Authentication authentication = authenticationManager.authenticate(authenticationToken);
+                    UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+                    String access_token = authenticationService.generateToken(userDetails.getUsername());
+                    return ResponseEntity.ok().body(access_token);
+                } catch (AuthenticationException e) {
+                    // Handle authentication failure
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Credentials ! please");
         }
     }
+
     @PostMapping("/register")
     public ResponseEntity<?> addNewUser(@RequestBody User userDetails) {
         return authenticationService.saveUser(userDetails);
     }
 
-    //use spring security default login url.
+    @GetMapping("/get/username")
+    public String getUsername(@RequestParam(required = true)Long userId){
+        return authenticationService.getUsernameFromId(userId);
+    }
+
+    @GetMapping("/check/userId")
+    public ResponseEntity<?> checkUserId(@RequestParam(required = true)Long userId){
+        return authenticationService.checkValidUserId(userId);
+    }
 
 }

@@ -1,0 +1,16 @@
+server:
+  port: 8099
+
+spring:
+  config:
+    import: configserver:http://localhost:8888
+  application:
+    name: CARBIDS-COMMENT-SERVICE
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+
+

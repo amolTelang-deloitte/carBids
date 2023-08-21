@@ -21,5 +21,7 @@ public class Bid {
     @NonNull
     private Long userId;
     @NonNull
+    private String userName;
+    @NonNull
     private String bidValue;
 }

@@ -2,6 +2,7 @@ package com.CarBids.carBidsauthenticationservice.exception;
 
 import com.CarBids.carBidsauthenticationservice.exception.exceptions.InvalidBase64Exception;
 import com.CarBids.carBidsauthenticationservice.exception.exceptions.InvalidCredentialsException;
+import com.CarBids.carBidsauthenticationservice.exception.exceptions.InvalidIdException;
 import com.CarBids.carBidsauthenticationservice.exception.exceptions.UserAlreadyExistsException;
 import org.omg.CORBA.UserException;
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,15 @@ import java.time.ZonedDateTime;
 
 @ControllerAdvice
 public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
+
+    //invalid userId
+    @ExceptionHandler(value = InvalidIdException.class)
+    public ResponseEntity<Object> handleInvalidIdException(InvalidIdException ex){
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        ExceptionDetails e = new ExceptionDetails(ex.getMessage(), status, ZonedDateTime.now(ZoneId.of("Z")));
+        return new ResponseEntity<>(e,status);
+
+    }
 
     //user already exists exception
     @ExceptionHandler(value = UserAlreadyExistsException.class)

@@ -43,8 +43,6 @@ public class Lot {
     @NonNull
     private String startingValue;
     @NonNull
-    private String minBidValue;
-    @NonNull
     private LotStatus lotStatus;
     @NonNull
     private LocalDateTime startTimestamp;
@@ -52,4 +50,6 @@ public class Lot {
     private Date endDate;
     @NonNull
     private Long userId;
+    @NonNull
+    private String username;
 }

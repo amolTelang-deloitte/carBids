@@ -10,10 +10,13 @@ public interface ILotService {
     ResponseEntity<?>getFilteredLot(String modelYear, String bodyType, String transmissionType );
     ResponseEntity<?>getActiveListings();
     ResponseEntity<?>getLotbyId(Long lotId);
-    ResponseEntity<?>closeLotPremature(Long lotId);
-    void closeExpiredLots();
-    ResponseEntity<?> deleteLot(Long lotId);
-    ResponseEntity<?> updateLot(Long lotId);
+    ResponseEntity<?>closeLotPremature(Long lotId,Long userId);
+
+    ResponseEntity<?>checkLotId(Long lotId);
+    ResponseEntity<?>checkLotStatus(Long lotId);
+    ResponseEntity<?>getClosedListings();
+   // void closeExpiredLots();
+
 
 
 }

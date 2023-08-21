@@ -3,6 +3,7 @@ package com.CarBids.carBidslotsservice.controller;
 import com.CarBids.carBidslotsservice.dto.CarDetails;
 import com.CarBids.carBidslotsservice.enums.CarEnum.BodyType;
 import com.CarBids.carBidslotsservice.enums.CarEnum.TransmissionType;
+import com.CarBids.carBidslotsservice.exception.exceptions.InvalidAuthException;
 import com.CarBids.carBidslotsservice.service.ILotService;
 import com.CarBids.carBidslotsservice.util.JwtUtil;
 import io.jsonwebtoken.Claims;
@@ -35,7 +36,7 @@ public class LotController {
             return lotService.saveLot(carDetails,userId);
         }
         else{
-            throw new RuntimeException("missing authorization header");
+            throw new InvalidAuthException("Invalid Credentials");
         }
     }
 
@@ -61,13 +62,36 @@ public class LotController {
         return lotService.getActiveListings();
     }
 
+    @GetMapping("/get/closed")
+    public ResponseEntity<?> getClosedListings(){
+        return lotService.getClosedListings();
+    }
+
     @GetMapping("/get/getLot")
     public ResponseEntity<?> getLotById(@RequestParam(required = true)Long lotId){
         return lotService.getLotbyId(lotId);
     }
 
+    @GetMapping("/check/lotId")
+    public ResponseEntity<?> checkLotId(@RequestParam(required = true)Long lotId){
+        return lotService.checkLotId(lotId);
+    }
+
+    @GetMapping("/check/lotStatus")
+    public ResponseEntity<?> checkLotStatus(@RequestParam(required = true)Long lotId){
+        return lotService.checkLotStatus(lotId);
+    }
+
     @PostMapping("/end/premature")
-    public ResponseEntity<?> clostLotPremature(@RequestParam(required = true)Long lotId){
-        return lotService.closeLotPremature(lotId);
+    public ResponseEntity<?> clostLotPremature(@RequestParam(required = true)Long lotId,HttpServletRequest request){
+        String authorizationHeader = request.getHeader("Authorization");
+        if(authorizationHeader != null && authorizationHeader.startsWith("Bearer ")){
+            authorizationHeader = authorizationHeader.substring(7);
+            Long userId = Long.parseLong(jwtUtil.getUserIdFromToken(authorizationHeader));
+            return lotService.closeLotPremature(lotId,userId);
+        }
+        else{
+            throw new InvalidAuthException("Invalid Credentials");
+        }
     }
 }

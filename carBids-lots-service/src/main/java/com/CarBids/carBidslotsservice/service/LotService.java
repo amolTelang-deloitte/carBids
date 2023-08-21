@@ -1,20 +1,27 @@
 package com.CarBids.carBidslotsservice.service;
 
-import com.CarBids.carBidslotsservice.dto.CarDetails;
+import com.CarBids.carBidslotsservice.dto.*;
 import com.CarBids.carBidslotsservice.entity.Lot;
 import com.CarBids.carBidslotsservice.enums.CarEnum.BodyType;
 import com.CarBids.carBidslotsservice.enums.CarEnum.TransmissionType;
 import com.CarBids.carBidslotsservice.enums.LotEnum.LotStatus;
+import com.CarBids.carBidslotsservice.exception.exceptions.InvalidDataException;
+import com.CarBids.carBidslotsservice.exception.exceptions.InvalidIdException;
+import com.CarBids.carBidslotsservice.exception.exceptions.InvalidTypeException;
+import com.CarBids.carBidslotsservice.exception.exceptions.InvalidUserException;
+import com.CarBids.carBidslotsservice.feignClient.AuthFeignClient;
+import com.CarBids.carBidslotsservice.feignClient.BiddingFeignClient;
 import com.CarBids.carBidslotsservice.repository.LotRepository;
 import com.CarBids.carBidslotsservice.specification.LotSpecification;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-
-import javax.transaction.Transactional;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -22,14 +29,47 @@ public class LotService implements ILotService {
 
     private final LotRepository lotRepository;
 
-    public LotService(LotRepository lotRepository) {
+    private final AuthFeignClient authFeignClient;
+
+    private final BiddingFeignClient biddingFeignClient;
+
+    @Autowired
+    public LotService(LotRepository lotRepository, AuthFeignClient authFeignClient, BiddingFeignClient biddingFeignClient) {
         this.lotRepository = lotRepository;
+        this.authFeignClient = authFeignClient;
+        this.biddingFeignClient = biddingFeignClient;
     }
 
     @Override
+    @HystrixCommand(groupKey = "bidding", commandKey = "startBidding",fallbackMethod = "biddingServiceFallback")
     public ResponseEntity<?> saveLot(CarDetails carDetails,Long userId) {
+
+       if(!Arrays.stream(TransmissionType.values())
+               .map(Enum::name)
+               .anyMatch(transmissionType -> transmissionType.equals(carDetails.getTransmissionType().toUpperCase())))
+           throw new InvalidTypeException("Invalid Transmission Type, Check again");
+
+       if(!Arrays.stream(BodyType.values())
+               .map(Enum::name)
+               .anyMatch(bodyType -> bodyType.equals(carDetails.getBodyType().toUpperCase())))
+           throw new InvalidTypeException("Invalid Body Type, Check again");
+
+       if(!checkValidYear(carDetails.getModelYear()))
+           throw new InvalidDataException("Invalid Model Year. Check again");
+
+       if(carDetails.getCarPhotosURI().size()< 6)
+           throw new InvalidDataException("Please upload a minimum of 6 photos");
+
+       if(Integer.parseInt(carDetails.getStartingValue()) <= 0)
+           throw new InvalidDataException("Please give valid starting price");
+
+       if(!checkUserId(userId))
+           throw new InvalidDataException("Invalid Credential, Login again");
+
         TransmissionType transmissionType = TransmissionType.valueOf(carDetails.getTransmissionType().toUpperCase());
         BodyType bodyType = BodyType.valueOf(carDetails.getBodyType().toUpperCase());
+        String username = getUsername(userId);
+
         Lot newLot = Lot.builder()
                 .vin(carDetails.getVin())
                 .carName(carDetails.getCarName())
@@ -39,15 +79,26 @@ public class LotService implements ILotService {
                 .photoUri(carDetails.getCarPhotosURI())
                 .listerComment(carDetails.getListerComment())
                 .startingValue(carDetails.getStartingValue())
-                .minBidValue(carDetails.getMinBidValue())
                 .lotStatus(LotStatus.RUNNING)
                 .startTimestamp(LocalDateTime.now())
                 .endDate(carDetails.getEndDate())
                 .userId(userId)
+                .username(username)
                 .build();
-        lotRepository.save(newLot);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(newLot);
+
+       Lot savedLot =  lotRepository.save(newLot);
+       try{
+           CollectionDetails collectionDetails = CollectionDetails.builder()
+                   .lotId(savedLot.getLotId())
+                   .startingValue(savedLot.getStartingValue())
+                   .build();
+           System.out.println(collectionDetails);
+
+           biddingFeignClient.startBiddingService(collectionDetails);
+       }catch (Exception e){
+           throw new RuntimeException("bidding service down");
+       }
+        return new ResponseEntity<>(newLot,HttpStatus.CREATED);
     }
 
     @Override
@@ -56,8 +107,13 @@ public class LotService implements ILotService {
     }
 
     @Override
-    public ResponseEntity<?> getFilteredLot(String modelYear, String transmissionType, String bodyType ) {
-        Specification<Lot> specification = LotSpecification.withCriteria(modelYear, transmissionType, bodyType);
+    public ResponseEntity<?> getFilteredLot(String modelYear, String transmissiontype, String bodytype ) {
+
+        if(!checkValidYear(modelYear))
+            throw new InvalidDataException("Invalid Model Year. Check again");
+
+
+        Specification<Lot> specification = LotSpecification.withCriteria(modelYear, transmissiontype, bodytype);
         List<Lot> filteredLot = lotRepository.findAll(specification);
         return new ResponseEntity<>(filteredLot,HttpStatus.FOUND);
     }
@@ -68,42 +124,123 @@ public class LotService implements ILotService {
     }
 
     @Override
+    @HystrixCommand(groupKey = "bidding", commandKey = "closeBidding",fallbackMethod = "biddingServiceFallback")
     public ResponseEntity<?> getLotbyId(Long lotId) {
-        return new ResponseEntity<>(lotRepository.findById(lotId).get(),HttpStatus.OK);
+        Lot lot = lotRepository.findById(lotId)
+                .orElseThrow(() -> new InvalidIdException("Invalid Lot Id, Check again"));
+        try{
+            BidCollection bidCollection = biddingFeignClient.getBidCollection(lotId);
+            System.out.println(bidCollection);
+            CombinedLotDetails combinedLotDetails = CombinedLotDetails.builder()
+                    .lotId(lot.getLotId())
+                    .vin(lot.getVin())
+                    .carName(lot.getCarName())
+                    .bodyType(lot.getBodyType())
+                    .transmissionType(lot.getTransmissionType())
+                    .modelYear(lot.getModelYear())
+                    .photoUri(lot.getPhotoUri())
+                    .listerComment(lot.getListerComment())
+                    .startingValue(lot.getStartingValue())
+                    .lotStatus(lot.getLotStatus())
+                    .startTimestamp(lot.getStartTimestamp())
+                    .endDate(lot.getEndDate())
+                    .userId(lot.getUserId())
+                    .username(lot.getUsername())
+                    .currentHighestBid(bidCollection.getCurrentHighestBid())
+                    .highestBidUserId(bidCollection.getHighestBidUserId())
+                    .highestBidUsername(bidCollection.getHighestBidUsername())
+                    .noOfBids(bidCollection.getNoOfBids())
+                    .build();
+            return new ResponseEntity<>(combinedLotDetails,HttpStatus.OK);
+        }
+        catch (Exception ex){
+            throw new InvalidIdException(ex.getMessage());
+        }
     }
 
-    @Override
-    public ResponseEntity<?> closeLotPremature(Long lotId) {
-        Lot lot = lotRepository.findById(lotId)
-                .orElseThrow(() -> new IllegalArgumentException("Lot with ID " + lotId + " not found"));
 
+
+    @Override
+    @HystrixCommand(groupKey = "bidding", commandKey = "closeBidding",fallbackMethod = "biddingServiceFallback")
+    public ResponseEntity<?> closeLotPremature(Long lotId,Long userId) {
+        Lot lot = lotRepository.findById(lotId)
+                .orElseThrow(() -> new InvalidIdException("Lot with ID " + lotId + " not found"));
+
+    if(userId != lot.getUserId() ){
+        throw new InvalidUserException("Invalid User, Cannot perform action");
+    }
         lot.setLotStatus(LotStatus.CLOSED);
         lotRepository.save(lot);
+        biddingFeignClient.closeBiddingService(lotId);
         return new ResponseEntity<>("successfully closed lot",HttpStatus.OK);
     }
 
     @Override
-    @Transactional
-    @Scheduled(fixedRate = 3000)
-    public void closeExpiredLots() {
-        List<Lot> expiredLot = lotRepository.findByEndDateBeforeAndLotStatus(LocalDateTime.now(), LotStatus.RUNNING);
-        expiredLot.stream()
-                .filter(lot -> lot.getLotStatus() == LotStatus.RUNNING)
-                .forEach(lot -> {
-                    lot.setLotStatus(LotStatus.CLOSED);
-                });
-        lotRepository.saveAll(expiredLot);
+    public ResponseEntity<?> getClosedListings() {
+        return new ResponseEntity<>(lotRepository.findByLotStatus(LotStatus.CLOSED),HttpStatus.FOUND);
+    }
 
+
+    public Boolean checkValidYear(String modelYear){
+        if(modelYear.isEmpty())
+            return false;
+        int currentYear = LocalDate.now().getYear();
+        return Integer.parseInt(modelYear) <= currentYear;
+    }
+
+    @HystrixCommand(groupKey = "auth", commandKey = "username",fallbackMethod = "authServiceFallback")
+    public String getUsername(Long userId){
+        String username = authFeignClient.getUsername(userId);
+        if(username.isEmpty())
+        {
+            throw new InvalidDataException("Invalid UserId");
+        }
+        return username;
     }
 
     @Override
-    public ResponseEntity<?> deleteLot(Long lotId) {
-        return null;
+    public ResponseEntity<?> checkLotId(Long lotId) {
+        return new ResponseEntity<>(lotRepository.existsById(lotId), HttpStatus.OK) ;
     }
 
     @Override
-    public ResponseEntity<?> updateLot(Long lotId) {
-        return null;
+    public ResponseEntity<?> checkLotStatus(Long lotId) {
+        LotStatus status =lotRepository.findById(lotId).get().getLotStatus();
+
+        if(status.equals(LotStatus.CLOSED))
+            return new ResponseEntity<>(false,HttpStatus.OK);
+
+        return new ResponseEntity<>(true,HttpStatus.OK);
+    }
+
+    @HystrixCommand(groupKey = "auth", commandKey = "userId",fallbackMethod = "authServiceFallback")
+    public Boolean checkUserId(Long userId){
+
+        ResponseEntity<UserIdCheck> response = authFeignClient.checkUserId(userId);
+        if (response.getStatusCode().is2xxSuccessful()) {
+            return response.getBody().getCheck();
+        } else {
+            throw new InvalidDataException("Invalid UserId");
+        }
+
+    }
+
+    public ResponseEntity<?> authServiceFallback(){
+        FallbackResponse fallbackResponse = FallbackResponse.builder()
+                .message("Authentication Service is down, Try again later.")
+                .timeStamp(LocalDateTime.now())
+                .httpCode(HttpStatus.SERVICE_UNAVAILABLE)
+                .build();
+        return new ResponseEntity<>(fallbackResponse,HttpStatus.SERVICE_UNAVAILABLE);
+    }
+
+    public ResponseEntity<?> biddingServiceFallback(){
+        FallbackResponse fallbackResponse = FallbackResponse.builder()
+                .message("Bidding Service is down, Try again later.")
+                .timeStamp(LocalDateTime.now())
+                .httpCode(HttpStatus.SERVICE_UNAVAILABLE)
+                .build();
+        return new ResponseEntity<>(fallbackResponse,HttpStatus.SERVICE_UNAVAILABLE);
     }
 
 }

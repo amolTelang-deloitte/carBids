@@ -1,5 +1,5 @@
 server:
-  port: 8090
+  port: 8060
 
 spring:
   application:
@@ -12,7 +12,47 @@ spring:
           uri: lb://AUTHENTICATION-SERVICE
           predicates:
             - Path=/auth/**
+          filters:
+            - RewritePath=/auth/(?<path>.*), /$\{path}
 
+        - id: carbids-lots-service
+          uri: lb://CARBIDS-LOTS-SERVICE
+          predicates:
+            - Path=/api/lot/**
+          filters:
+            - RewritePath=/api/lot/(?<path>.*), /$\{path}
+
+        - id: carbids-bidding-service
+          uri: lb://CARBIDS-BIDDING-SERVICE
+          predicates:
+            - Path=/api/bid/**
+          filters:
+            - RewritePath=/api/bid/(?<path>.*), /$\{path}
+
+        - id: carbids-comment-service
+          uri: lb://CARBIDS-COMMENT-SERVICE
+          predicates:
+            - Path=/api/comment/**
+          filters:
+            - RewritePath=/api/comment/(?<path>.*), /$\{path}
+        - id: openapi
+          uri: http://localhost:${server.port}
+          predicates:
+            - Path=/v3/api-docs/**
+          filters:
+            - RewritePath=/v3/api-docs/(?<path>.*), /$\{path}/v3/api-docs
+
+springdoc:
+  swagger-ui:
+    urls:
+     - name: auth
+       url: /v3/api-docs/auth
+     - name: lot
+       url: /v3/api-docs/lot
+     - name: bid
+       url: /v3/api-docs/bidding
+     - name: comment
+       url: /v3/api-docs/comment
 eureka:
   instance:
     prefer-ip-address: true

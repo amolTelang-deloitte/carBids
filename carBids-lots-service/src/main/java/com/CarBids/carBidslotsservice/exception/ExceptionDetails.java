@@ -1,4 +1,4 @@
-package com.CarBids.carBidsauthenticationservice.exception;
+package com.CarBids.carBidslotsservice.exception;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
