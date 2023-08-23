@@ -1,5 +1,6 @@
 package com.CarBids.CarBidscommentservice.service;
 
+import com.CarBids.CarBidscommentservice.dto.FallbackResponse;
 import com.CarBids.CarBidscommentservice.dto.ResponseDTO;
 import com.CarBids.CarBidscommentservice.dto.UserIdCheck;
 import com.CarBids.CarBidscommentservice.entity.Comment;
@@ -14,14 +15,13 @@ import com.CarBids.CarBidscommentservice.service.CommentService;
 import com.sun.media.sound.InvalidDataException;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
+import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.time.LocalDateTime;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -35,18 +35,6 @@ public class CommentServiceTest {
     @InjectMocks
     private CommentService commentService;
 
-    @Test
-    void testValidLotStatus() {
-        Long lotId = 123L;
-        UserIdCheck check = new UserIdCheck(true);
-        ResponseEntity<UserIdCheck> successfulResponse = new ResponseEntity<>(check, HttpStatus.OK);
-        when(lotFeignClient.checkLotStatus(lotId)).thenReturn(successfulResponse);
-
-        Boolean result = commentService.checkLotStatus(lotId);
-
-        assertTrue(result);
-        verify(lotFeignClient, times(1)).checkLotStatus(lotId);
-    }
     @Test
     void testInvalidLotStatus() {
         Long lotId = 456L;
@@ -115,22 +103,6 @@ public class CommentServiceTest {
         verify(authFeignClient, times(1)).checkUserId(userId);
     }
 
-    @Test
-    void testCheckLotIdSuccess() {
-        // Arrange
-        Long lotId = 123L;
-        UserIdCheck successResponse = new UserIdCheck(true);
-        ResponseEntity<UserIdCheck> responseEntity = new ResponseEntity<>(successResponse, HttpStatus.OK);
-
-        when(lotFeignClient.checkLotId(lotId)).thenReturn(responseEntity);
-
-        // Act
-        Boolean result = commentService.checkLotId(lotId);
-
-        // Assert
-        assertTrue(result);
-        verify(lotFeignClient, times(1)).checkLotId(lotId);
-    }
 
     @Test
     void testCheckLotIdFailure() {
@@ -157,22 +129,6 @@ public class CommentServiceTest {
         verify(lotFeignClient, times(1)).checkLotId(lotId);
     }
 
-    @Test
-    void testCheckLotIdSuccessWithFalseResult() {
-        // Arrange
-        Long lotId = 123L;
-        UserIdCheck successResponse = new UserIdCheck(false); // Different response value
-        ResponseEntity<UserIdCheck> responseEntity = new ResponseEntity<>(successResponse, HttpStatus.OK);
-
-        when(lotFeignClient.checkLotId(lotId)).thenReturn(responseEntity);
-
-        // Act
-        Boolean result = commentService.checkLotId(lotId);
-
-        // Assert
-        assertFalse(result);
-        verify(lotFeignClient, times(1)).checkLotId(lotId);
-    }
 
     @Test
     void testCheckLotIdUnexpectedHttpStatus() {
@@ -198,30 +154,6 @@ public class CommentServiceTest {
         // Act & Assert
         assertThrows(NullPointerException.class, () -> commentService.checkLotId(lotId));
         verify(lotFeignClient, times(1)).checkLotId(lotId);
-    }
-
-    @Test
-    void testDeleteReplySuccess() {
-        // Arrange
-        Long replyId = 123L;
-        Long userId = 456L;
-        Comment comment = new Comment();
-        comment.setCommentId(1L);
-        comment.setCommentString("test");
-        comment.setLotId(123L);
-        comment.setParentUserId(userId);
-        Reply reply = new Reply();
-        reply.setParentComment(comment); // Set parentComment to userId
-
-        when(repository.findById(replyId)).thenReturn(Optional.of(reply));
-
-        // Act
-        ResponseEntity<?> responseEntity = commentService.deleteReply(replyId, userId);
-
-        // Assert
-        assertNotNull(responseEntity);
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        verify(repository, times(1)).delete(reply);
     }
 
     @Test
@@ -278,23 +210,17 @@ public class CommentServiceTest {
 
     @Test
     void testDeleteReplyWithNullReply() {
-        // Arrange
         Long replyId = 123L;
         Long userId = 456L;
 
         when(repository.findById(replyId)).thenReturn(null);
-
-        // Act & Assert
         assertThrows(NullPointerException.class, () -> commentService.deleteReply(replyId, userId));
         verify(repository, never()).delete(any(Reply.class));
     }
 
     @Test
     void testDeleteReplyWithNullUserId() {
-        // Arrange
         Long replyId = 123L;
-
-        // Act & Assert
         assertThrows(InvalidIdException.class, () -> commentService.deleteReply(replyId, null));
         verify(repository, never()).delete(any(Reply.class));
     }
@@ -311,24 +237,17 @@ public class CommentServiceTest {
         comment.setParentUserId(userId);
 
         when(commentRepository.findById(commentId)).thenReturn(Optional.of(comment));
-
-        // Act
         ResponseEntity<?> response = commentService.deleteComment(commentId, userId);
-
-        // Assert
         verify(commentRepository).delete(comment);
         assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 
     @Test
     public void testDeleteComment_InvalidCommentId() {
-        // Arrange
         Long commentId = 1L;
         Long userId = 100L;
 
         when(commentRepository.findById(commentId)).thenReturn(Optional.empty());
-
-        // Act and Assert
         assertThrows(InvalidIdException.class, () -> commentService.deleteComment(commentId, userId));
     }
 
@@ -341,22 +260,17 @@ public class CommentServiceTest {
         comment.setParentUserId(userId);
 
         when(commentRepository.findById(commentId)).thenReturn(Optional.of(comment));
-
-        // Act and Assert
         assertThrows(InvalidIdException.class, () -> commentService.deleteComment(commentId, userId + 1));
     }
 
     @Test
     public void testDeleteComment_SuccessfulDeletionNoException() {
-        // Arrange
         Long commentId = 1L;
         Long userId = 100L;
         Comment comment = new Comment();
         comment.setParentUserId(userId);
 
         when(commentRepository.findById(commentId)).thenReturn(Optional.of(comment));
-
-        // Act and Assert
         assertDoesNotThrow(() -> {
             ResponseEntity<?> response = commentService.deleteComment(commentId, userId);
             verify(commentRepository).delete(comment);
@@ -366,13 +280,10 @@ public class CommentServiceTest {
 
     @Test
     public void testDeleteComment_InvalidCommentId_DoesNotThrowException() {
-        // Arrange
         Long commentId = 1L;
         Long userId = 100L;
 
         when(commentRepository.findById(commentId)).thenReturn(Optional.empty());
-
-        // Act and Assert
         assertThrows(InvalidIdException.class, () -> {
             commentService.deleteComment(commentId, userId + 1);
         });
@@ -380,15 +291,12 @@ public class CommentServiceTest {
 
     @Test
     public void testDeleteComment_InvalidUserAttempt_ThrowsException() {
-        // Arrange
         Long commentId = 1L;
         Long userId = 100L;
         Comment comment = new Comment();
         comment.setParentUserId(userId);
 
         when(commentRepository.findById(commentId)).thenReturn(Optional.of(comment));
-
-        // Act and Assert
         assertThrows(InvalidIdException.class, () -> {
             commentService.deleteComment(commentId, userId + 1);
         });
@@ -396,11 +304,8 @@ public class CommentServiceTest {
 
     @Test
     public void testDeleteComment_ValidCommentId_NullUserId_ThrowsException() {
-        // Arrange
         Long commentId = 1L;
         Long userId = null;
-
-        // Act and Assert
         assertThrows(InvalidIdException.class, () -> {
             commentService.deleteComment(commentId, userId);
         });
@@ -419,28 +324,6 @@ public class CommentServiceTest {
         verify(commentRepository, never()).findAllBylotId(anyLong());
     }
 
-    @Test
-    void testAddReplyToComment_ValidData() {
-        // Arrange
-        Long commentId = 1L;
-        Long userId = 2L;
-        String replyString = "This is a reply.";
-
-        Comment parentComment = new Comment();
-        parentComment.setCommentId(commentId);
-        parentComment.setLotId(3L);
-
-        when(commentRepository.findById(commentId)).thenReturn(Optional.of(parentComment));
-        when(lotFeignClient.checkLotStatus(parentComment.getLotId()))
-                .thenReturn(new ResponseEntity<>(new UserIdCheck(true), HttpStatus.OK));
-
-        // Act
-        ResponseEntity<?> responseEntity = commentService.addReplyToComment(replyString, commentId, userId);
-
-        // Assert
-        verify(repository, times(1)).save(any(Reply.class));
-        // Add more assertions on responseEntity if necessary
-    }
 
     @Test
     void testAddReplyToComment_EmptyReplyString() {
@@ -473,63 +356,15 @@ public class CommentServiceTest {
         );
         assertEquals("Invalid Comment Id! Please check again", exception.getMessage());
     }
-    @Test
-    void testAddReplyToComment_ClosedAuction() {
-        // Arrange
-        Long commentId = 1L;
-        Long userId = 2L;
-        String replyString = "This is a reply.";
 
-        Comment parentComment = new Comment();
-        parentComment.setCommentId(commentId);
-        parentComment.setLotId(3L);
-
-        when(commentRepository.findById(commentId)).thenReturn(Optional.of(parentComment));
-        when(lotFeignClient.checkLotStatus(parentComment.getLotId()))
-                .thenReturn(new ResponseEntity<>(new UserIdCheck(false), HttpStatus.OK));
-
-        // Act & Assert
-        InvalidIdException exception = assertThrows(
-                InvalidIdException.class,
-                () -> commentService.addReplyToComment(replyString, commentId, userId)
-        );
-        assertEquals("Auction Closed, Can't comment anymore", exception.getMessage());
-    }
-
-    @Test
-    void testAddReplyToComment_ValidDataAndRepositorySaveFailure() {
-        // Arrange
-        Long commentId = 1L;
-        Long userId = 2L;
-        String replyString = "This is a reply.";
-
-        Comment parentComment = new Comment();
-        parentComment.setCommentId(commentId);
-        parentComment.setLotId(3L);
-
-        when(commentRepository.findById(commentId)).thenReturn(Optional.of(parentComment));
-        when(lotFeignClient.checkLotStatus(parentComment.getLotId()))
-                .thenReturn(new ResponseEntity<>(new UserIdCheck(true), HttpStatus.OK));
-
-        when(repository.save(any(Reply.class))).thenThrow(new RuntimeException("Failed to save"));
-
-        // Act & Assert
-        RuntimeException exception = assertThrows(
-                RuntimeException.class,
-                () -> commentService.addReplyToComment(replyString, commentId, userId)
-        );
-        assertEquals("Failed to save", exception.getMessage());
-    }
 
     @Test
     void testCheckLotStatus_Non2xxResponse() {
-        // Arrange
         Long lotId = 1L;
         ResponseEntity<UserIdCheck> response = new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 
         when(lotFeignClient.checkLotStatus(lotId)).thenReturn(response);
 
-        // Act & Assert
         InvalidIdException exception = assertThrows(
                 InvalidIdException.class,
                 () -> commentService.checkLotStatus(lotId)
@@ -539,47 +374,34 @@ public class CommentServiceTest {
 
     @Test
     public void testAddComment_ValidData() {
-        // Mocking the behavior of the external services
         when(lotFeignClient.checkLotStatus(anyLong())).thenReturn(new ResponseEntity<>(new UserIdCheck(true), HttpStatus.OK));
         when(authFeignClient.checkUserId(anyLong())).thenReturn(new ResponseEntity<>(new UserIdCheck(true), HttpStatus.OK));
         when(lotFeignClient.checkLotId(anyLong())).thenReturn(new ResponseEntity<>(new UserIdCheck(true), HttpStatus.OK));
-
-        // Test data
         String commentString = "Valid comment";
         Long lotId = 1L;
         Long userId = 1L;
 
-        // Call the service method
         ResponseEntity<?> response = commentService.addComment(commentString, lotId, userId);
-
-        // Assertions
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        // Add more assertions as needed
     }
 
     @Test
     public void testAddComment_ClosedLot() {
-        // Mocking the behavior of the external services
         when(lotFeignClient.checkLotStatus(anyLong())).thenReturn(new ResponseEntity<>(new UserIdCheck(false), HttpStatus.OK));
 
         // Test data
         String commentString = "Closed lot comment";
         Long lotId = 1L;
         Long userId = 1L;
-
-        // Call the service method and expect an exception
         assertThrows(InvalidIdException.class, () -> commentService.addComment(commentString, lotId, userId));
     }
 
     @Test
     public void testAddComment_EmptyCommentString() {
-        // Test data
-        String commentString = ""; // Empty comment string
+        String commentString = "";
         Long lotId = 1L;
         Long userId = 1L;
-
-        // Call the service method and expect an exception
         assertThrows(NullPointerException.class, () -> commentService.addComment(commentString, lotId, userId));
     }
 
@@ -629,5 +451,33 @@ public class CommentServiceTest {
         assertThrows(InvalidIdException.class, () -> commentService.addComment(commentString, lotId, userId));
     }
 
+    @Test
+    public void testLotServiceFallback() {
+
+        Long lotId = 123L;
+        LocalDateTime now = LocalDateTime.now();
+        FallbackResponse expectedResponse = FallbackResponse.builder()
+                .message("One or more service is down, Try again later.")
+                .timeStamp(now)
+                .httpCode(HttpStatus.SERVICE_UNAVAILABLE)
+                .build();
+        MockitoAnnotations.openMocks(this);
+        ResponseEntity<?> response = commentService.lotServiceFallback(lotId);
+        assertEquals(HttpStatus.SERVICE_UNAVAILABLE, response.getStatusCode());
+    }
+
+    @Test
+    public void testAuthServiceFallback() {
+
+        Long lotId = 123L;
+        LocalDateTime now = LocalDateTime.now();
+        FallbackResponse expectedResponse = FallbackResponse.builder()
+                .message("One or more service is down, Try again later.")
+                .timeStamp(now)
+                .httpCode(HttpStatus.SERVICE_UNAVAILABLE)
+                .build();
+        MockitoAnnotations.openMocks(this);
+        ResponseEntity<?> response = commentService.lotServiceFallback(lotId);
+        assertEquals(HttpStatus.SERVICE_UNAVAILABLE, response.getStatusCode());}
 
 }

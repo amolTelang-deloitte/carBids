@@ -30,7 +30,7 @@ public class JwtService implements IJwtService {
         return claims.getSubject();
     }
 
-    private String createToken(Map<String, Object> claims, String userName,Long userId) {
+    String createToken(Map<String, Object> claims, String userName, Long userId) {
         logger.info("Generating JWT Token"+" "+ LocalDateTime.now());
         return Jwts.builder()
                 .setClaims(claims)
@@ -41,7 +41,7 @@ public class JwtService implements IJwtService {
                 .signWith(getSignKey(), SignatureAlgorithm.HS256).compact();
     }
 
-    private Key getSignKey() {
+    Key getSignKey() {
         byte[] keyBytes = Decoders.BASE64.decode(SECRET);
         return Keys.hmacShaKeyFor(keyBytes);
     }

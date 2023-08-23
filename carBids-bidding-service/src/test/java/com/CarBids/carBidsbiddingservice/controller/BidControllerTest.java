@@ -42,7 +42,6 @@ public class BidControllerTest {
     public void testCloseBidding() {
         Long collectionId = 1L;
 
-        // Mock behavior of the bidService.closeBidding() method
         ResponseEntity<ResponseDTO> expectedResponse = ResponseEntity.ok(
                 ResponseDTO.builder()
                         .status(HttpStatus.OK)
@@ -52,15 +51,11 @@ public class BidControllerTest {
         Mockito.doReturn(expectedResponse)
                 .when(bidService)
                 .closeBidding(collectionId);
-
-        // Call the controller method
         ResponseEntity<?> responseEntity = bidController.closeBidding(collectionId);
 
-        // Verify that the expected ResponseEntity is returned
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         assertEquals("Successfully placed bid", ((ResponseDTO) responseEntity.getBody()).getMessage());
 
-        // Verify that the bidService.closeBidding() method was called with the correct argument
         verify(bidService).closeBidding(collectionId);
     }
 

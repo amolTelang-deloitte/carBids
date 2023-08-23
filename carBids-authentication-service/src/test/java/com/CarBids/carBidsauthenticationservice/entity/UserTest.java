@@ -53,6 +53,5 @@ class UserTest {
         assertEquals(expectedToString, user.toString());
     }
 
-    // You can also write tests for custom methods or business logic related to the User entity
 
 }

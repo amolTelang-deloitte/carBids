@@ -13,7 +13,6 @@ import com.CarBids.CarBidscommentservice.repository.CommentRepository;
 import com.CarBids.CarBidscommentservice.repository.ReplyRepository;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import com.sun.media.sound.InvalidDataException;
-import feign.FeignException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,9 +43,10 @@ public class CommentService implements ICommentService{
     }
 
     @Override
-    public ResponseEntity<?> addComment(String commentString, Long lotId, Long userId) throws InvalidDataException {
+    public ResponseEntity<?> addComment(String commentString, Long lotId, Long userId)   {
         logger.info("Attempting to comment on lot"+" "+lotId+" "+LocalDateTime.now());
-        if(!checkLotStatus(lotId)){
+        ResponseDTO lotDto = checkLotStatus(lotId);
+        if(lotDto.getData().equals(false)){
             logger.error("Attempting to comment on closed lot"+" "+lotId+" "+LocalDateTime.now());
             throw new InvalidIdException("Auction Closed, Cant comment anymore");
         }
@@ -55,8 +55,8 @@ public class CommentService implements ICommentService{
             logger.warn("Entered empty comment" +" "+lotId+" "+LocalDateTime.now());
             throw new InvalidContentException("Comment is empty");
         }
-        ResponseDTO lotDto = checkLotId(lotId);
-        if(lotDto.getData().equals(false)){
+        ResponseDTO lotDto2 = checkLotId(lotId);
+        if(lotDto2.getData().equals(false)){
             logger.error("Invalid lotId"+" "+lotId+" "+LocalDateTime.now());
             throw new InvalidIdException("Invald Lot Id, Check again");
         }
@@ -89,7 +89,8 @@ public class CommentService implements ICommentService{
         Comment parentComment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new InvalidIdException("Invalid Comment Id! Please check again"));
 
-        if(!checkLotStatus(parentComment.getLotId())){
+        ResponseDTO lotDto = checkLotStatus(parentComment.getLotId());
+        if(lotDto.getData().equals(false)){
             logger.error("Attempting to comment on closed lot"+" "+parentComment.getLotId()+" "+LocalDateTime.now());
             throw new InvalidIdException("Auction Closed, Can't comment anymore");
         }
@@ -161,7 +162,7 @@ public class CommentService implements ICommentService{
     }
 
     @HystrixCommand(fallbackMethod = "authServiceFallback")
-    public ResponseDTO checkUserId(Long userId) throws InvalidDataException {
+    public ResponseDTO checkUserId(Long userId)  {
 
         ResponseEntity<UserIdCheck> response = authFeignClient.checkUserId(userId);
         if (response.getStatusCode().is2xxSuccessful()) {
@@ -171,9 +172,8 @@ public class CommentService implements ICommentService{
                     .build();
             return responseDTO;
         } else {
-            throw new InvalidDataException("Invalid UserId");
+            throw new InvalidIdException("Invalid UserId");
         }
-
     }
     @HystrixCommand(fallbackMethod = "lotServiceFallback")
     public ResponseDTO checkLotId(Long lotId){
@@ -191,21 +191,22 @@ public class CommentService implements ICommentService{
 
     @HystrixCommand(fallbackMethod = "lotServiceFallback")
     public ResponseDTO checkLotStatus(Long lotId) {
-            ResponseEntity<UserIdCheck> response = lotFeignClient.checkLotStatus(lotId);
-            if(response.getStatusCode().is2xxSuccessful()){
-                ResponseDTO responseDTO = ResponseDTO.builder()
-                        .status(HttpStatus.OK)
-                        .data(response.getBody().getCheck())
-                        .build();
-                return responseDTO;
-            }else{
-                throw new InvalidIdException("Invalid LotId,Check again");
-            }
+        ResponseEntity<UserIdCheck> response = lotFeignClient.checkLotStatus(lotId);
+        if(response.getStatusCode().is2xxSuccessful()){
+            ResponseDTO responseDTO = ResponseDTO.builder()
+                    .status(HttpStatus.OK)
+                    .data(response.getBody().getCheck())
+                    .build();
+            return responseDTO;
+        }else{
+            throw new InvalidIdException("Invalid LotId,Check again");
         }
+    }
+
 
     public ResponseEntity<?> authServiceFallback(){
         FallbackResponse fallbackResponse = FallbackResponse.builder()
-                .message("Authentication Service is down, Try again later.")
+                .message("One or more service is down, Try again later.")
                 .timeStamp(LocalDateTime.now())
                 .httpCode(HttpStatus.SERVICE_UNAVAILABLE)
                 .build();
@@ -214,7 +215,7 @@ public class CommentService implements ICommentService{
 
     public ResponseEntity<?> lotServiceFallback(Long lotId){
         FallbackResponse fallbackResponse = FallbackResponse.builder()
-                .message("Lot Service is down, Try again later.")
+                .message("One or more service is down, Try again later.")
                 .timeStamp(LocalDateTime.now())
                 .httpCode(HttpStatus.SERVICE_UNAVAILABLE)
                 .build();

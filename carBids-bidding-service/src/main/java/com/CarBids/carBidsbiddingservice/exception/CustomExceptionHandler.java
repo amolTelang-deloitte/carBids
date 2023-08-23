@@ -4,6 +4,7 @@ import com.CarBids.carBidsbiddingservice.exception.exceptions.ClosedAutionExcept
 import com.CarBids.carBidsbiddingservice.exception.exceptions.InvalidIdException;
 import com.CarBids.carBidsbiddingservice.exception.exceptions.InvalidDataException;
 import com.CarBids.carBidsbiddingservice.exception.exceptions.InvalidUserException;
+import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -50,12 +51,20 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(e,status);
     }
 
-    //generic exception
+    @ExceptionHandler(value = ExpiredJwtException.class)
+    public ResponseEntity<?> handleExpiredJWT(final ExpiredJwtException exception, WebRequest request){
+        HttpStatus unauth = HttpStatus.UNAUTHORIZED;
+        ExceptionDetails exceptionDetails = new ExceptionDetails(exception.getMessage(), unauth,ZonedDateTime.now(ZoneId.of("Z")));
+        return new ResponseEntity<>(exceptionDetails,HttpStatus.UNAUTHORIZED);
+
+    }
+
     @ExceptionHandler(value = Exception.class)
     public ResponseEntity<?> handleGenericException(final Exception exception, WebRequest request){
-        HttpStatus unauth = HttpStatus.UNAUTHORIZED;
-        ExceptionDetails errorDetails = new ExceptionDetails(exception.getMessage(), unauth, ZonedDateTime.now(ZoneId.of("Z")));
-        return new ResponseEntity<>(errorDetails, HttpStatus.FORBIDDEN);
+        HttpStatus unauth = HttpStatus.SERVICE_UNAVAILABLE;
+        ExceptionDetails errorDetails = new ExceptionDetails("One or more services are down, Try again later", unauth, ZonedDateTime.now(ZoneId.of("Z")));
+        return new ResponseEntity<>(errorDetails, HttpStatus.SERVICE_UNAVAILABLE);
+
     }
 
 }

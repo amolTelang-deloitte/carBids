@@ -3,13 +3,14 @@ package com.CarBids.CarBidscommentservice.repository;
 
 import com.CarBids.CarBidscommentservice.entity.Comment;
 import com.CarBids.CarBidscommentservice.service.CommentService;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
+import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,8 +19,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest
+
 @DataJpaTest
+@RunWith(SpringRunner.class)
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public class CommentRepositoryTest {
     @Mock
     private CommentRepository commentRepository;
@@ -27,11 +30,6 @@ public class CommentRepositoryTest {
     @InjectMocks
     private CommentService commentService;
 
-    @BeforeEach
-    public void setUp() {
-        MockitoAnnotations.initMocks(this);
-        commentService = new CommentService(commentRepository);
-    }
 
     @Test
     public void testFindAllByLotId() {
@@ -42,15 +40,15 @@ public class CommentRepositoryTest {
         comments.add(comment1);
         comments.add(comment2);
 
-        when(commentRepository.findAllByLotId(lotId)).thenReturn(comments);
+        when(commentRepository.findAllBylotId(lotId)).thenReturn(comments);
 
-        List<Comment> resultComments = commentService.findAllByLotId(lotId);
+        List<Comment> resultComments = commentRepository.findAllBylotId(lotId);
 
         assertEquals(2, resultComments.size());
         assertEquals(comment1, resultComments.get(0));
         assertEquals(comment2, resultComments.get(1));
 
-        verify(commentRepository, times(1)).findAllByLotId(lotId);
+        verify(commentRepository, times(1)).findAllBylotId(lotId);
         verifyNoMoreInteractions(commentRepository);
     }
 
@@ -58,13 +56,13 @@ public class CommentRepositoryTest {
     public void testFindAllByLotId_NoComments() {
         Long lotId = 1L;
 
-        when(commentRepository.findAllByLotId(lotId)).thenReturn(new ArrayList<>());
+        when(commentRepository.findAllBylotId(lotId)).thenReturn(new ArrayList<>());
 
-        List<Comment> resultComments = commentService.findAllByLotId(lotId);
+        List<Comment> resultComments = commentRepository.findAllBylotId(lotId);
 
         assertTrue(resultComments.isEmpty());
 
-        verify(commentRepository, times(1)).findAllByLotId(lotId);
+        verify(commentRepository, times(1)).findAllBylotId(lotId);
         verifyNoMoreInteractions(commentRepository);
     }
 }

@@ -45,14 +45,17 @@ public class LotService implements ILotService {
     }
 
     @Override
-    @HystrixCommand(fallbackMethod = "saveLotFallback")
     public ResponseEntity<?> saveLot(CarDetails carDetails,Long userId) {
-
        if(!Arrays.stream(TransmissionType.values())
                .map(Enum::name)
                .anyMatch(transmissionType -> transmissionType.equals(carDetails.getTransmissionType().toUpperCase()))){
            logger.warn("Invalid Transmision type entered"+" "+LocalDateTime.now());
            throw new InvalidTypeException("Invalid Transmission Type, Check again");
+       }
+
+       if(!(carDetails.getModelYear().length() == 4 && carDetails.getModelYear().matches("\\d+"))){
+           logger.warn("Invalid data entered as model year");
+           throw new InvalidDataException("Invalid Model year entered");
        }
 
        if(!Arrays.stream(BodyType.values())
@@ -67,9 +70,9 @@ public class LotService implements ILotService {
            throw new InvalidDataException("Invalid Model Year. Check again");
        }
 
-       if(carDetails.getCarPhotosURI().size()< 6){
+       if(carDetails.getCarPhotosURI().isEmpty()){
            logger.warn("Added less than 6 photos"+" "+LocalDateTime.now());
-           throw new InvalidDataException("Please upload a minimum of 6 photos");
+           throw new InvalidDataException("Please upload a minimum of 1 photo");
        }
 
        if(Integer.parseInt(carDetails.getStartingValue()) <= 0){
@@ -140,10 +143,6 @@ public class LotService implements ILotService {
     @Override
     public ResponseEntity<?> getFilteredLot(String modelYear, String transmissiontype, String bodytype ) {
         logger.info("Attempting to filter Lots "+" "+LocalDateTime.now());
-        if(!checkValidYear(modelYear)){
-            logger.warn("Invalid model year entered "+" "+LocalDateTime.now());
-            throw new InvalidDataException("Invalid Model Year. Check again");
-        }
         Specification<Lot> specification = LotSpecification.withCriteria(modelYear, transmissiontype, bodytype);
         List<Lot> filteredLot = lotRepository.findAll(specification);
         ResponseDTO responseDTO = ResponseDTO.builder()
@@ -161,13 +160,13 @@ public class LotService implements ILotService {
     }
 
     @Override
-   @HystrixCommand(fallbackMethod = "biddingServiceFallback")
     public ResponseEntity<?> getLotbyId(Long lotId) {
         Lot lot = lotRepository.findById(lotId)
                 .orElseThrow(() -> new InvalidIdException("Invalid Lot Id, Check again"));
         try{
             logger.error("Attempting to get Lot by LotId "+" "+LocalDateTime.now());
             BidCollection bidCollection = biddingFeignClient.getBidCollection(lotId);
+            System.out.println(bidCollection);
             CombinedLotDetails combinedLotDetails = CombinedLotDetails.builder()
                     .lotId(lot.getLotId())
                     .vin(lot.getVin())
@@ -195,7 +194,6 @@ public class LotService implements ILotService {
             throw new InvalidIdException(ex.getMessage());
         }
     }
-
 
 
     @Override
@@ -342,7 +340,7 @@ public class LotService implements ILotService {
 
     }
 
-    public ResponseEntity<?> closeLotFallback(CarDetails carDetails,Long userId){
+    public ResponseEntity<?> closeLotFallback(Long lotId,Long userId){
         FallbackResponse fallbackResponse = FallbackResponse.builder()
                 .message("One or more service is down, Try again later")
                 .timeStamp(LocalDateTime.now())

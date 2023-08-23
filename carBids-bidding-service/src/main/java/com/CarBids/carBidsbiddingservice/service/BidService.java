@@ -1,6 +1,5 @@
 package com.CarBids.carBidsbiddingservice.service;
 
-import com.CarBids.carBidsbiddingservice.CarBidsBiddingServiceApplication;
 import com.CarBids.carBidsbiddingservice.dto.*;
 import com.CarBids.carBidsbiddingservice.event.BidPlacedEvent;
 import com.CarBids.carBidsbiddingservice.entity.BidCollection;
@@ -134,6 +133,15 @@ public class BidService implements IBidService{
             throw new InvalidDataException("Invalid UserId");
         }
 
+    }
+
+    public ResponseEntity<?> addBidFallback(BidDetails bidDetails, Long userId){
+        FallbackResponse fallbackResponse = FallbackResponse.builder()
+                .message("One or more service is down, Try again later.")
+                .timeStamp(LocalDateTime.now())
+                .httpCode(HttpStatus.SERVICE_UNAVAILABLE)
+                .build();
+        return new ResponseEntity<>(fallbackResponse,HttpStatus.SERVICE_UNAVAILABLE);
     }
 
     public ResponseDTO authServiceFallback(Long userId){

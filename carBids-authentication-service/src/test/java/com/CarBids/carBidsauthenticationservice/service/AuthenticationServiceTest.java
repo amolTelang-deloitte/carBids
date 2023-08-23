@@ -3,10 +3,14 @@ package com.CarBids.carBidsauthenticationservice.service;
 
 import com.CarBids.carBidsauthenticationservice.entity.User;
 import com.CarBids.carBidsauthenticationservice.exception.exceptions.InvalidBase64Exception;
+import com.CarBids.carBidsauthenticationservice.exception.exceptions.InvalidCredentialsException;
+import com.CarBids.carBidsauthenticationservice.exception.exceptions.UserAlreadyExistsException;
 import com.CarBids.carBidsauthenticationservice.repository.UserRepository;
 import com.mysql.cj.util.Base64Decoder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -14,6 +18,11 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.util.Base64;
+import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -28,6 +37,8 @@ class AuthenticationServiceTest {
     private IJwtService jwtService;
     @MockBean
     private Base64Decoder base64Decoder;
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
    @Autowired
    private AuthenticationService authenticationService;
@@ -130,6 +141,72 @@ class AuthenticationServiceTest {
         String validEmail = "test@example.com";
         assertTrue(authenticationService.isValidEmail(validEmail));
     }
+
+    @Test
+    public void testIsValidPhoneNoInvalid() {
+        assertFalse(authenticationService.isValidPhoneNo("abcdefghij"));
+        assertFalse(authenticationService.isValidPhoneNo("123456"));
+        assertFalse(authenticationService.isValidPhoneNo("12345678901"));
+    }
+
+    @Test
+    public void testGenerateToken_successful() {
+        // Given
+        String username = "testUser";
+        User mockUser = new User();
+        mockUser.setUserId(1L);
+
+        when(userRepository.findByusername(eq(username))).thenReturn(mockUser);
+        when(jwtService.generateToken(eq(username), eq(1L))).thenReturn("mockedToken");
+
+        // When
+        String token = jwtService.generateToken(username,1L);
+
+        // Then
+        assertNotNull(token);
+        assertEquals("mockedToken", token);
+    }
+
+    @Test
+    public void testGenerateToken_UserNotFound() {
+        // Given
+        String username = "nonExistingUser";
+
+        when(userRepository.findByusername(eq(username))).thenReturn(null);
+
+        // When
+        String token = jwtService.generateToken(username,1L);
+
+        // Then
+        assertNull(token);
+
+    }
+
+    @Test
+    public void testSaveUser_Success() {
+        User user = new User();
+        user.setUsername("newuser");
+        user.setEmail("newuser@example.com");
+        user.setPhoneNumber("123436837");
+        user.setPassword(Base64.getEncoder().encodeToString("password123".getBytes()));
+
+        when(userRepository.existsByEmailOrPhoneNumber(user.getEmail(), user.getPhoneNumber())).thenReturn(false);
+        when(userRepository.existsByusername(user.getUsername())).thenReturn(false);
+        when(passwordEncoder.encode(Mockito.anyString())).thenReturn("encodedPassword");
+        when(userRepository.save(any(User.class))).thenReturn(user);
+
+        ResponseEntity<?> responseEntity = authenticationService.saveUser(user);
+
+        assertNotNull(responseEntity);
+        assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());
+        assertEquals("User added successfully", responseEntity.getBody());
+    }
+
+
+
+
+
+
 
 
 

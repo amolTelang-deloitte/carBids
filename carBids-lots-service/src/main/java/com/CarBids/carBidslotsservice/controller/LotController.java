@@ -2,6 +2,7 @@ package com.CarBids.carBidslotsservice.controller;
 
 import com.CarBids.carBidslotsservice.dto.CarDetails;
 import com.CarBids.carBidslotsservice.dto.ResponseDTO;
+import com.CarBids.carBidslotsservice.entity.Lot;
 import com.CarBids.carBidslotsservice.enums.CarEnum.BodyType;
 import com.CarBids.carBidslotsservice.enums.CarEnum.TransmissionType;
 import com.CarBids.carBidslotsservice.exception.exceptions.InvalidAuthException;
@@ -12,10 +13,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/lot")
@@ -54,6 +58,11 @@ public class LotController {
             @RequestParam(required = false)String bodyType,
             @RequestParam(required = false)String transmissionType
             ){
+        if(modelYear.isEmpty() && transmissionType.isEmpty() && bodyType.isEmpty())
+        {
+            List<Lot> empty = new ArrayList<Lot>();
+            return new ResponseEntity<>(empty,HttpStatus.NO_CONTENT);
+        }
             return lotService.getFilteredLot(modelYear,bodyType,transmissionType);
     }
 
@@ -77,11 +86,6 @@ public class LotController {
     @GetMapping("/get/getLot")
     public ResponseEntity<?> getLotById(@RequestParam(required = true)Long lotId){
         return lotService.getLotbyId(lotId);
-    }
-
-    @GetMapping("/get/checkUserId")
-    public ResponseDTO testUserId(@RequestParam(required = true)Long lotId) {
-        return lotService.checkUserId(lotId);
     }
 
     @GetMapping("/check/lotId")
@@ -109,4 +113,5 @@ public class LotController {
             throw new InvalidAuthException("Invalid Credentials");
         }
     }
+
 }

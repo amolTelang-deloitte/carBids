@@ -1,9 +1,13 @@
 package com.CarBids.carBidslotsservice.controller;
 
 import com.CarBids.carBidslotsservice.dto.CarDetails;
+import com.CarBids.carBidslotsservice.dto.ResponseDTO;
 import com.CarBids.carBidslotsservice.entity.Lot;
 import com.CarBids.carBidslotsservice.enums.CarEnum.BodyType;
+import com.CarBids.carBidslotsservice.enums.CarEnum.TransmissionType;
+import com.CarBids.carBidslotsservice.enums.LotEnum.LotStatus;
 import com.CarBids.carBidslotsservice.exception.exceptions.InvalidAuthException;
+import com.CarBids.carBidslotsservice.repository.LotRepository;
 import com.CarBids.carBidslotsservice.service.LotService;
 import com.CarBids.carBidslotsservice.util.JwtUtil;
 import org.junit.jupiter.api.Test;
@@ -14,6 +18,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import javax.servlet.http.HttpServletRequest;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -26,6 +35,9 @@ public class LotControllerTest {
 
     @Mock
     private LotService lotService;
+
+    @Mock
+    private LotRepository lotRepository;
 
     @Mock
     private JwtUtil jwtUtil;
@@ -313,20 +325,7 @@ public class LotControllerTest {
         verify(lotService).checkLotStatus(closedLotId);
     }
 
-//    @Test
-//    public void testCheckLotStatusWithInvalidLotId() {
-//        // Arrange
-//        Long invalidLotId = -1L;
-//        when(lotService.checkLotStatus(invalidLotId)).thenReturn(new ResponseEntity<>("Invalid ID", HttpStatus.NOT_FOUND));
-//
-//        // Act
-//        ResponseEntity<?> response = lotController.checkLotStatus(invalidLotId);
-//
-//        // Assert
-//        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-//        assertEquals("Invalid ID", response.getBody());
-//        verify(lotService).checkLotStatus(invalidLotId);
-//    }
+
 
     @Test
     public void testCloseLotPrematureWithValidAuthorization() {
@@ -373,6 +372,56 @@ public class LotControllerTest {
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         verify(lotService).closeLotPremature(lotId, 456L);
     }
+
+    @Test
+    void testCheckLotIdExists() {
+        // Given
+        Long lotId = 123L;
+        when(lotController.checkLotId(lotId)).thenReturn(new ResponseEntity<>(HttpStatus.OK));
+
+        // When
+        ResponseEntity<?> response = lotController.checkLotId(lotId);
+
+        // Then
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(lotService, times(1)).checkLotId(lotId);
+    }
+
+    @Test
+    void testCheckLotIdDoesNotExist() {
+        // Given
+        Long lotId = 456L;
+        when(lotController.checkLotId(lotId)).thenReturn(new ResponseEntity<>(HttpStatus.OK));
+
+        // When
+        ResponseEntity<?> response = lotController.checkLotId(lotId);
+
+        // Then
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(lotService, times(1)).checkLotId(lotId);
+    }
+
+
+    @Test
+    void testGetAllLot() {
+        // Given
+        List<Lot> fakeLotTests = new ArrayList<>();
+        List<String> photoURI = new ArrayList<>();
+        Date date = new Date();
+        fakeLotTests.add(new Lot(1L,"vin","carName",BodyType.COUPE, TransmissionType.AUTOMATIC,"2023",photoURI,"test","startt", LotStatus.RUNNING, LocalDateTime.now(), date,1L,"test" ));
+        fakeLotTests.add(new Lot(1L,"vin","carName",BodyType.COUPE, TransmissionType.AUTOMATIC,"2023",photoURI,"test","startt", LotStatus.RUNNING, LocalDateTime.now(), date,1L,"test" ));
+        fakeLotTests.add(new Lot(1L,"vin","carName",BodyType.COUPE, TransmissionType.AUTOMATIC,"2023",photoURI,"test","startt", LotStatus.RUNNING, LocalDateTime.now(), date,1L,"test" ));
+        ResponseDTO expectedResponse = new ResponseDTO(HttpStatus.OK, "All Running and closed lots", fakeLotTests);
+        when(lotService.getAllLot()).thenReturn(new ResponseEntity(expectedResponse, HttpStatus.OK));
+        ResponseEntity<?> response = lotController.getAllLot();
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        ResponseDTO responseDTO = (ResponseDTO) response.getBody();
+        assertEquals(expectedResponse.getStatus(), responseDTO.getStatus());
+        assertEquals(expectedResponse.getMessage(), responseDTO.getMessage());
+        assertEquals(expectedResponse.getData(), responseDTO.getData());
+        verify(lotService, times(1)).getAllLot();    }
 
 
 }

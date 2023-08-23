@@ -2,24 +2,20 @@ package com.CarBids.carBidsbiddingservice.service;
 
 import com.CarBids.carBidsbiddingservice.dto.*;
 import com.CarBids.carBidsbiddingservice.entity.BidCollection;
-import com.CarBids.carBidsbiddingservice.enums.CollectionStatus;
 import com.CarBids.carBidsbiddingservice.event.BidPlacedEvent;
 import com.CarBids.carBidsbiddingservice.exception.exceptions.InvalidDataException;
 import com.CarBids.carBidsbiddingservice.exception.exceptions.InvalidIdException;
-import com.CarBids.carBidsbiddingservice.exception.exceptions.InvalidUserException;
 import com.CarBids.carBidsbiddingservice.feignClient.AuthFeignClient;
 import com.CarBids.carBidsbiddingservice.repository.BidCollectionRepository;
 import com.CarBids.carBidsbiddingservice.repository.BidRepository;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-
-import java.time.Clock;
 import java.time.LocalDateTime;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.times;
@@ -33,8 +29,6 @@ public class BiddingServiceTest {
     private BidService bidService;
     @Mock
     private BidPlacedEvent eventPublisher;
-    @Mock
-    private Clock fixedClock;
 
     @Test
     void testCheckUserIdSuccess() {
@@ -237,6 +231,46 @@ public class BiddingServiceTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Successfully placed bid", ((ResponseDTO) response.getBody()).getMessage());
     }
+    @Test
+    void testGetUserFallback(){
+        Long userId = 1L;
+        Mockito.when(bidService.usernameFallback(userId)).thenThrow(new RuntimeException());
+
+        // When
+        String username = bidService.usernameFallback(userId);
+
+        // Then
+        assertEquals(" One or more service is down, Try again later", username);
+    }
+
+    @Test
+    void testAuthServiceFallback() {
+        // Given
+        Long userId = 123L;
+        LocalDateTime mockedDateTime = LocalDateTime.of(2023, 8, 21, 12, 0); // Set your desired date and time
+        ResponseDTO responseDTO = bidService.authServiceFallback(userId);
+        assertEquals(HttpStatus.SERVICE_UNAVAILABLE, responseDTO.getStatus());
+
+        FallbackResponse expectedFallbackResponse = FallbackResponse.builder()
+                .message("One or more service is down, Try again later.")
+                .timeStamp(mockedDateTime)
+                .httpCode(HttpStatus.SERVICE_UNAVAILABLE)
+                .build();
+
+        assertNotEquals(expectedFallbackResponse, responseDTO.getData());
+    }
+
+    @Test
+    public void testSaveBidCollection() {
+        CollectionDetails collectionDetails = new CollectionDetails();
+        collectionDetails.setLotId(123L);
+        collectionDetails.setStartingValue("1000");
+        ResponseEntity<?> responseEntity = bidService.saveBidCollection(collectionDetails);
+        assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());
+        verify(bidCollectionRepository).save(any(BidCollection.class));
+    }
+
+
 
 
 
